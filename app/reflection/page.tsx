@@ -58,14 +58,13 @@ export default function ReflectionPage() {
           
           // Load draft from localStorage
           const draftKey = `reflection_draft_${week.id}`
-            const savedDraft = localStorage.getItem(draftKey)
-            if (savedDraft) {
-              try {
-                const parsed = JSON.parse(savedDraft) as ReflectionDraft
-                setDraft(parsed)
-              } catch (e) {
-                console.error('Error parsing draft:', e)
-              }
+          const savedDraft = localStorage.getItem(draftKey)
+          if (savedDraft) {
+            try {
+              const parsed = JSON.parse(savedDraft) as ReflectionDraft
+              setDraft(parsed)
+            } catch (e) {
+              console.error('Error parsing draft:', e)
             }
           }
         }
