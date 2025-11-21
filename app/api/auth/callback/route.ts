@@ -60,8 +60,16 @@ export async function POST(request: NextRequest) {
         .eq('id', userId)
 
       if (updateError) {
+        console.error('Profile update error:', {
+          message: updateError.message,
+          code: updateError.code,
+          details: updateError.details,
+        })
         return NextResponse.json(
-          { error: 'Failed to update profile' },
+          { 
+            error: 'Failed to update profile',
+            details: updateError.message,
+          },
           { status: 500 }
         )
       }
@@ -75,8 +83,17 @@ export async function POST(request: NextRequest) {
         })
 
       if (insertError) {
+        console.error('Profile insert error:', {
+          message: insertError.message,
+          code: insertError.code,
+          details: insertError.details,
+          hint: insertError.hint,
+        })
         return NextResponse.json(
-          { error: 'Failed to create profile' },
+          { 
+            error: 'Failed to create profile',
+            details: insertError.message,
+          },
           { status: 500 }
         )
       }
