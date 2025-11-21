@@ -46,13 +46,33 @@ export default function InvitePage() {
         .eq('invite_token', token)
         .single()
 
-      // Log for debugging
+      // Enhanced error logging
       if (circleError) {
-        console.error('Circle lookup error:', circleError)
+        console.error('Circle lookup error details:', {
+          message: circleError.message,
+          details: circleError.details,
+          hint: circleError.hint,
+          code: circleError.code,
+        })
+        console.error('Full error object:', circleError)
+        console.error('Error keys:', Object.keys(circleError))
         console.error('Token used:', token)
+        console.error('Circle data returned:', circle)
       }
 
-      if (circleError || !circle) {
+      // Check if it's a "no rows" error (common with .single())
+      if (circleError) {
+        // PGRST116 = no rows found, PGRST117 = multiple rows found
+        if (circleError.code === 'PGRST116' || circleError.message?.includes('JSON object requested')) {
+          setError('This invite link is not valid. Please ask for a new one.')
+        } else {
+          setError(circleError.message || 'Failed to verify invite link. Please try again.')
+        }
+        setLoading(false)
+        return
+      }
+
+      if (!circle) {
         setError('This invite link is not valid. Please ask for a new one.')
         setLoading(false)
         return
