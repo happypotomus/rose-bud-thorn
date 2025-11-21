@@ -63,6 +63,9 @@ export default async function DashboardPage() {
   }
 
   const circleId = membership.circle_id
+  const circleName = Array.isArray(membership.circles)
+    ? membership.circles[0]?.name ?? 'Your Circle'
+    : ((membership.circles as { name?: string } | null)?.name ?? 'Your Circle')
 
   // Check if user has a reflection for current week
   const { data: reflection } = await supabase
@@ -135,7 +138,7 @@ export default async function DashboardPage() {
         <div className="mt-8 space-y-2">
           <div className="bg-gray-100 p-3 rounded-md text-left">
             <p className="text-xs text-gray-600 mb-1">
-              <strong>Circle:</strong> {(membership.circles as { name: string } | null)?.name || 'Your Circle'}
+              <strong>Circle:</strong> {circleName}
             </p>
             <p className="text-xs text-gray-600 mb-1">
               <strong>Week:</strong> {new Date(currentWeek.start_at).toLocaleDateString()} - {new Date(currentWeek.end_at).toLocaleDateString()}
