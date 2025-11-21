@@ -100,13 +100,25 @@ export default function ReadPage() {
 
         // Transform and sort alphabetically by first name
         const friendReflections: FriendReflection[] = reflections
-          .map((r: any) => ({
-            user_id: r.user_id,
-            first_name: (r.profiles as { first_name: string } | null)?.first_name || 'Friend',
-            rose_text: r.rose_text || '',
-            bud_text: r.bud_text || '',
-            thorn_text: r.thorn_text || '',
-          }))
+          .map((r: any) => {
+            // Handle both array and object formats from Supabase join
+            let firstName = 'Friend'
+            if (r.profiles) {
+              if (Array.isArray(r.profiles)) {
+                firstName = r.profiles[0]?.first_name || 'Friend'
+              } else {
+                firstName = (r.profiles as { first_name: string }).first_name || 'Friend'
+              }
+            }
+            
+            return {
+              user_id: r.user_id,
+              first_name: firstName,
+              rose_text: r.rose_text || '',
+              bud_text: r.bud_text || '',
+              thorn_text: r.thorn_text || '',
+            }
+          })
           .sort((a, b) => a.first_name.localeCompare(b.first_name))
 
         setFriends(friendReflections)
