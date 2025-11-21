@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { getCurrentWeek } from '@/lib/supabase/week'
+import { getCurrentWeekClient } from '@/lib/supabase/week'
 
 type ReflectionDraft = {
   rose: string
@@ -34,7 +34,7 @@ export default function ReflectionPage() {
   useEffect(() => {
     const loadData = async () => {
       // Get current week
-      const week = await getCurrentWeek()
+      const week = await getCurrentWeekClient(supabase)
 
       if (!week) {
         console.error('Unable to load current week')

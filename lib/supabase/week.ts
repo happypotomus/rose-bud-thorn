@@ -1,4 +1,5 @@
 import { createClient } from './server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export type Week = {
   id: string
@@ -8,13 +9,10 @@ export type Week = {
 }
 
 /**
- * Get or create the current week
- * Returns the week where now() is between start_at and end_at
- * If no such week exists, creates one
+ * Get or create the current week (client-side version)
+ * Accepts a Supabase client instance for use in client components
  */
-export async function getCurrentWeek(): Promise<Week | null> {
-  const supabase = await createClient()
-  
+export async function getCurrentWeekClient(supabase: SupabaseClient): Promise<Week | null> {
   const { data, error } = await supabase
     .rpc('get_or_create_current_week')
     .single()
@@ -30,5 +28,15 @@ export async function getCurrentWeek(): Promise<Week | null> {
   }
 
   return data as Week
+}
+
+/**
+ * Get or create the current week (server-side version)
+ * Returns the week where now() is between start_at and end_at
+ * If no such week exists, creates one
+ */
+export async function getCurrentWeek(): Promise<Week | null> {
+  const supabase = await createClient()
+  return getCurrentWeekClient(supabase)
 }
 
