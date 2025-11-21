@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentWeek } from '@/lib/supabase/week'
+import { getCurrentWeek } from '@/lib/supabase/week-server'
 import { isCircleUnlocked } from '@/lib/supabase/unlock'
 import { ReadingStatus } from './reading-status'
 
