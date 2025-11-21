@@ -150,9 +150,9 @@ export default function ReadPage() {
     if (currentIndex < friends.length - 1) {
       handleNext()
     } else {
-      // Last friend - mark as read
+      // Last friend - mark as read and show bloom screen
       markAsRead()
-      // The bloom screen will show automatically due to the condition check
+      setCurrentIndex(friends.length) // This triggers the bloom screen condition
     }
   }
 
