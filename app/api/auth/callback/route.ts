@@ -125,6 +125,12 @@ export async function POST(request: NextRequest) {
       })
 
     if (membershipError) {
+      console.error('Circle membership insert error:', {
+        message: membershipError.message,
+        code: membershipError.code,
+        details: membershipError.details,
+        hint: membershipError.hint,
+      })
       // If unique constraint violation, user is already in a circle
       if (membershipError.code === '23505') {
         const { data: existing } = await supabase
@@ -141,7 +147,10 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json(
-        { error: 'Failed to add user to circle' },
+        { 
+          error: 'Failed to add user to circle',
+          details: membershipError.message,
+        },
         { status: 500 }
       )
     }
