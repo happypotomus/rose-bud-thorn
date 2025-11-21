@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentWeek } from '@/lib/supabase/week'
 import { isCircleUnlocked } from '@/lib/supabase/unlock'
+import { ReadingStatus } from './reading-status'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -75,14 +76,19 @@ export default async function DashboardPage() {
   // Check if circle is unlocked using real unlock logic
   const isUnlocked = await isCircleUnlocked(circleId, currentWeek.id)
 
+  // Check if user has read all reflections (client-side check via localStorage)
+  // We'll check this on the client side since localStorage is client-only
+  const hasReadReflections = false // Will be checked client-side
+
   // Determine dashboard state
-  let dashboardState: 'no_reflection' | 'waiting' | 'unlocked' = 'no_reflection'
+  let dashboardState: 'no_reflection' | 'waiting' | 'unlocked' | 'read' = 'no_reflection'
   
   if (!reflection) {
     dashboardState = 'no_reflection'
   } else if (reflection && !isUnlocked) {
     dashboardState = 'waiting'
   } else if (isUnlocked) {
+    // Check reading status will be done client-side
     dashboardState = 'unlocked'
   }
 
@@ -120,16 +126,9 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* State 3: Circle unlocked & user already read everything */}
+        {/* State 3: Circle unlocked */}
         {dashboardState === 'unlocked' && (
-          <div className="space-y-4">
-            <p className="text-lg text-gray-600">
-              Your circle is unlocked!
-            </p>
-            <p className="text-sm text-gray-500">
-              (Reading flow coming in Chunk 8)
-            </p>
-          </div>
+          <ReadingStatus weekId={currentWeek.id} isUnlocked={isUnlocked} />
         )}
 
         {/* Debug info (can remove later) */}
