@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getCurrentWeek } from '@/lib/supabase/week'
 
 type ReflectionDraft = {
   rose: string
@@ -33,16 +34,13 @@ export default function ReflectionPage() {
   useEffect(() => {
     const loadData = async () => {
       // Get current week
-      const { data: weekData, error: weekError } = await supabase
-        .rpc('get_or_create_current_week')
-        .single()
+      const week = await getCurrentWeek()
 
-      if (weekError || !weekData) {
-        console.error('Unable to load current week', weekError)
+      if (!week) {
+        console.error('Unable to load current week')
         return
       }
 
-      const week = weekData as { id: string; start_at: string; end_at: string; created_at: string }
       setWeekId(week.id)
         
       // Get user's circle
