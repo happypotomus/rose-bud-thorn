@@ -35,17 +35,18 @@ export default function ReadPage() {
         }
 
         // Get current week
-        const { data: weekData } = await supabase
+        const { data: weekData, error: weekError } = await supabase
           .rpc('get_or_create_current_week')
           .single()
 
-        if (!weekData) {
+        if (weekError || !weekData) {
           setError('Unable to load current week')
           setLoading(false)
           return
         }
 
-        setWeekId(weekData.id)
+        const week = weekData as { id: string; start_at: string; end_at: string; created_at: string }
+        setWeekId(week.id)
 
         // Get user's circle
         const { data: membership } = await supabase
@@ -89,7 +90,7 @@ export default function ReadPage() {
             )
           `)
           .eq('circle_id', membership.circle_id)
-          .eq('week_id', weekData.id)
+          .eq('week_id', week.id)
           .not('submitted_at', 'is', null)
           .in('user_id', allMembers.map(m => m.user_id))
 
