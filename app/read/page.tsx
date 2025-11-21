@@ -83,10 +83,7 @@ export default function ReadPage() {
             user_id,
             rose_text,
             bud_text,
-            thorn_text,
-            profiles (
-              first_name
-            )
+            thorn_text
           `)
           .eq('circle_id', membership.circle_id)
           .eq('week_id', week.id)
@@ -99,27 +96,32 @@ export default function ReadPage() {
           return
         }
 
+        // Get all unique user IDs from reflections
+        const userIds = [...new Set(reflections.map((r: any) => r.user_id))]
+
+        // Fetch profiles separately to avoid RLS issues with joins
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, first_name')
+          .in('id', userIds)
+
+        // Create a map of user_id -> first_name for quick lookup
+        const profileMap = new Map<string, string>()
+        if (profiles) {
+          profiles.forEach((profile: any) => {
+            profileMap.set(profile.id, profile.first_name || 'Friend')
+          })
+        }
+
         // Transform and sort alphabetically by first name
         const friendReflections: FriendReflection[] = reflections
-          .map((r: any) => {
-            // Handle both array and object formats from Supabase join
-            let firstName = 'Friend'
-            if (r.profiles) {
-              if (Array.isArray(r.profiles)) {
-                firstName = r.profiles[0]?.first_name || 'Friend'
-              } else {
-                firstName = (r.profiles as { first_name: string }).first_name || 'Friend'
-              }
-            }
-            
-            return {
-              user_id: r.user_id,
-              first_name: firstName,
-              rose_text: r.rose_text || '',
-              bud_text: r.bud_text || '',
-              thorn_text: r.thorn_text || '',
-            }
-          })
+          .map((r: any) => ({
+            user_id: r.user_id,
+            first_name: profileMap.get(r.user_id) || 'Friend',
+            rose_text: r.rose_text || '',
+            bud_text: r.bud_text || '',
+            thorn_text: r.thorn_text || '',
+          }))
           .sort((a, b) => a.first_name.localeCompare(b.first_name))
 
         setFriends(friendReflections)
