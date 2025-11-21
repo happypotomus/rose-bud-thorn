@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getCurrentWeekClient } from '@/lib/supabase/week'
 import Link from 'next/link'
 
 type FriendReflection = {
@@ -35,17 +36,14 @@ export default function ReadPage() {
         }
 
         // Get current week
-        const { data: weekData, error: weekError } = await supabase
-          .rpc('get_or_create_current_week')
-          .single()
+        const week = await getCurrentWeekClient(supabase)
 
-        if (weekError || !weekData) {
+        if (!week) {
           setError('Unable to load current week')
           setLoading(false)
           return
         }
 
-        const week = weekData as { id: string; start_at: string; end_at: string; created_at: string }
         setWeekId(week.id)
 
         // Get user's circle
