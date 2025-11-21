@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentWeek } from '@/lib/supabase/week'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -30,6 +31,9 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .single()
 
+  // Get or create current week
+  const currentWeek = await getCurrentWeek()
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
       <div className="text-center max-w-md">
@@ -40,9 +44,26 @@ export default async function DashboardPage() {
           You're successfully logged in.
         </p>
         {membership && (
-          <div className="bg-gray-100 p-4 rounded-md">
+          <div className="bg-gray-100 p-4 rounded-md mb-4">
             <p className="text-sm text-gray-700">
               Circle: {(membership.circles as { name: string } | null)?.name || 'Your Circle'}
+            </p>
+          </div>
+        )}
+        {currentWeek && (
+          <div className="bg-gray-100 p-4 rounded-md mb-4">
+            <p className="text-sm text-gray-700">
+              Current Week: {new Date(currentWeek.start_at).toLocaleDateString()} - {new Date(currentWeek.end_at).toLocaleDateString()}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Week ID: {currentWeek.id.substring(0, 8)}...
+            </p>
+          </div>
+        )}
+        {!currentWeek && (
+          <div className="bg-yellow-100 p-4 rounded-md mb-4">
+            <p className="text-sm text-yellow-700">
+              Unable to load current week
             </p>
           </div>
         )}
