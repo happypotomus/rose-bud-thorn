@@ -21,9 +21,23 @@ export async function POST(request: NextRequest) {
       .eq('invite_token', inviteToken)
       .single()
 
+    // Enhanced error logging
+    if (circleError) {
+      console.error('Circle lookup error in API:', {
+        message: circleError.message,
+        code: circleError.code,
+        details: circleError.details,
+        hint: circleError.hint,
+      })
+      console.error('Invite token used:', inviteToken)
+    }
+
     if (circleError || !circle) {
       return NextResponse.json(
-        { error: 'Invalid invite token' },
+        { 
+          error: 'Invalid invite token',
+          details: circleError?.message || 'Circle not found',
+        },
         { status: 400 }
       )
     }
