@@ -33,6 +33,11 @@ export default async function DashboardPage() {
 
   // Get or create current week
   const currentWeek = await getCurrentWeek()
+  
+  // Log for debugging if week fails to load
+  if (!currentWeek) {
+    console.error('Failed to get current week - check server logs')
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">

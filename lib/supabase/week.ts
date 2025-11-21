@@ -20,7 +20,12 @@ export async function getCurrentWeek(): Promise<Week | null> {
     .single()
 
   if (error) {
-    console.error('Error getting current week:', error)
+    console.error('Error getting current week:', {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+    })
     return null
   }
 
