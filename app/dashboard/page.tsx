@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentWeek } from '@/lib/supabase/week'
+import { isCircleUnlocked } from '@/lib/supabase/unlock'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -71,23 +72,8 @@ export default async function DashboardPage() {
     .eq('week_id', currentWeek.id)
     .single()
 
-  // Check if circle is unlocked (simple check for now - will be real logic in Chunk 7)
-  // For now: check if all circle members have reflections
-  const { data: circleMembers } = await supabase
-    .from('circle_members')
-    .select('user_id')
-    .eq('circle_id', circleId)
-
-  const { data: submittedReflections } = await supabase
-    .from('reflections')
-    .select('user_id')
-    .eq('circle_id', circleId)
-    .eq('week_id', currentWeek.id)
-    .not('submitted_at', 'is', null)
-
-  const memberCount = circleMembers?.length || 0
-  const submittedCount = submittedReflections?.length || 0
-  const isUnlocked = memberCount > 0 && memberCount === submittedCount
+  // Check if circle is unlocked using real unlock logic
+  const isUnlocked = await isCircleUnlocked(circleId, currentWeek.id)
 
   // Determine dashboard state
   let dashboardState: 'no_reflection' | 'waiting' | 'unlocked' = 'no_reflection'
@@ -156,7 +142,7 @@ export default async function DashboardPage() {
               <strong>Week:</strong> {new Date(currentWeek.start_at).toLocaleDateString()} - {new Date(currentWeek.end_at).toLocaleDateString()}
             </p>
             <p className="text-xs text-gray-600">
-              <strong>State:</strong> {dashboardState} | Members: {memberCount} | Submitted: {submittedCount}
+              <strong>State:</strong> {dashboardState} | <strong>Unlocked:</strong> {isUnlocked ? 'Yes' : 'No'}
             </p>
           </div>
         </div>
