@@ -33,27 +33,32 @@ export default function ReflectionPage() {
   useEffect(() => {
     const loadData = async () => {
       // Get current week
-      const { data: weekData } = await supabase
+      const { data: weekData, error: weekError } = await supabase
         .rpc('get_or_create_current_week')
         .single()
 
-      if (weekData) {
-        setWeekId(weekData.id)
+      if (weekError || !weekData) {
+        console.error('Unable to load current week', weekError)
+        return
+      }
+
+      const week = weekData as { id: string; start_at: string; end_at: string; created_at: string }
+      setWeekId(week.id)
         
-        // Get user's circle
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: membership } = await supabase
-            .from('circle_members')
-            .select('circle_id')
-            .eq('user_id', user.id)
-            .single()
+      // Get user's circle
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: membership } = await supabase
+          .from('circle_members')
+          .select('circle_id')
+          .eq('user_id', user.id)
+          .single()
+        
+        if (membership) {
+          setCircleId(membership.circle_id)
           
-          if (membership) {
-            setCircleId(membership.circle_id)
-            
-            // Load draft from localStorage
-            const draftKey = `reflection_draft_${weekData.id}`
+          // Load draft from localStorage
+          const draftKey = `reflection_draft_${week.id}`
             const savedDraft = localStorage.getItem(draftKey)
             if (savedDraft) {
               try {
