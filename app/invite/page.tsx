@@ -46,6 +46,12 @@ export default function InvitePage() {
         .eq('invite_token', token)
         .single()
 
+      // Log for debugging
+      if (circleError) {
+        console.error('Circle lookup error:', circleError)
+        console.error('Token used:', token)
+      }
+
       if (circleError || !circle) {
         setError('This invite link is not valid. Please ask for a new one.')
         setLoading(false)
