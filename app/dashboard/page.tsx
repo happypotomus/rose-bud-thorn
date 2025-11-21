@@ -34,47 +34,135 @@ export default async function DashboardPage() {
   // Get or create current week
   const currentWeek = await getCurrentWeek()
   
-  // Log for debugging if week fails to load
   if (!currentWeek) {
-    console.error('Failed to get current week - check server logs')
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center p-24">
+        <div className="text-center max-w-md">
+          <div className="bg-yellow-100 p-4 rounded-md mb-4">
+            <p className="text-sm text-yellow-700">
+              Unable to load current week. Please refresh the page.
+            </p>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  if (!membership) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center p-24">
+        <div className="text-center max-w-md">
+          <p className="text-lg text-gray-600">
+            You're not in a circle yet.
+          </p>
+        </div>
+      </main>
+    )
+  }
+
+  const circleId = membership.circle_id
+
+  // Check if user has a reflection for current week
+  const { data: reflection } = await supabase
+    .from('reflections')
+    .select('id, submitted_at')
+    .eq('user_id', user.id)
+    .eq('circle_id', circleId)
+    .eq('week_id', currentWeek.id)
+    .single()
+
+  // Check if circle is unlocked (simple check for now - will be real logic in Chunk 7)
+  // For now: check if all circle members have reflections
+  const { data: circleMembers } = await supabase
+    .from('circle_members')
+    .select('user_id')
+    .eq('circle_id', circleId)
+
+  const { data: submittedReflections } = await supabase
+    .from('reflections')
+    .select('user_id')
+    .eq('circle_id', circleId)
+    .eq('week_id', currentWeek.id)
+    .not('submitted_at', 'is', null)
+
+  const memberCount = circleMembers?.length || 0
+  const submittedCount = submittedReflections?.length || 0
+  const isUnlocked = memberCount > 0 && memberCount === submittedCount
+
+  // Determine dashboard state
+  let dashboardState: 'no_reflection' | 'waiting' | 'unlocked' = 'no_reflection'
+  
+  if (!reflection) {
+    dashboardState = 'no_reflection'
+  } else if (reflection && !isUnlocked) {
+    dashboardState = 'waiting'
+  } else if (isUnlocked) {
+    dashboardState = 'unlocked'
   }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="text-center max-w-md">
+      <div className="text-center max-w-md w-full">
         <h1 className="text-4xl font-bold mb-4">
           Welcome{profile?.first_name ? `, ${profile.first_name}` : ''}!
         </h1>
-        <p className="text-lg text-gray-600 mb-8">
-          You're successfully logged in.
-        </p>
-        {membership && (
-          <div className="bg-gray-100 p-4 rounded-md mb-4">
-            <p className="text-sm text-gray-700">
-              Circle: {(membership.circles as { name: string } | null)?.name || 'Your Circle'}
+        
+        {/* State 1: No reflection yet */}
+        {dashboardState === 'no_reflection' && (
+          <div className="space-y-4">
+            <p className="text-lg text-gray-600">
+              Your reflection isn't done yet.
+            </p>
+            <button
+              className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 font-medium"
+              disabled
+            >
+              Start Reflection
+            </button>
+            <p className="text-xs text-gray-500 mt-2">
+              (Coming in Chunk 6)
             </p>
           </div>
         )}
-        {currentWeek && (
-          <div className="bg-gray-100 p-4 rounded-md mb-4">
-            <p className="text-sm text-gray-700">
-              Current Week: {new Date(currentWeek.start_at).toLocaleDateString()} - {new Date(currentWeek.end_at).toLocaleDateString()}
+
+        {/* State 2: Reflection submitted but circle not unlocked */}
+        {dashboardState === 'waiting' && (
+          <div className="space-y-4">
+            <p className="text-lg text-gray-600">
+              Your reflection is complete.
             </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Week ID: {currentWeek.id.substring(0, 8)}...
-            </p>
-          </div>
-        )}
-        {!currentWeek && (
-          <div className="bg-yellow-100 p-4 rounded-md mb-4">
-            <p className="text-sm text-yellow-700">
-              Unable to load current week
+            <p className="text-sm text-gray-500">
+              We'll text you when everyone is done.
             </p>
           </div>
         )}
-        <p className="text-sm text-gray-500 mt-8">
-          This is a placeholder dashboard. Reflection features coming soon!
-        </p>
+
+        {/* State 3: Circle unlocked & user already read everything */}
+        {dashboardState === 'unlocked' && (
+          <div className="space-y-4">
+            <p className="text-lg text-gray-600">
+              Your circle is unlocked!
+            </p>
+            <p className="text-sm text-gray-500">
+              (Reading flow coming in Chunk 8)
+            </p>
+          </div>
+        )}
+
+        {/* Debug info (can remove later) */}
+        <div className="mt-8 space-y-2">
+          <div className="bg-gray-100 p-3 rounded-md text-left">
+            <p className="text-xs text-gray-600 mb-1">
+              <strong>Circle:</strong> {(membership.circles as { name: string } | null)?.name || 'Your Circle'}
+            </p>
+            <p className="text-xs text-gray-600 mb-1">
+              <strong>Week:</strong> {new Date(currentWeek.start_at).toLocaleDateString()} - {new Date(currentWeek.end_at).toLocaleDateString()}
+            </p>
+            <p className="text-xs text-gray-600">
+              <strong>State:</strong> {dashboardState} | Members: {memberCount} | Submitted: {submittedCount}
+            </p>
+          </div>
+        </div>
       </div>
     </main>
   )
