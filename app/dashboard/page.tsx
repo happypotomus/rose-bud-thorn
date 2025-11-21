@@ -113,15 +113,12 @@ export default async function DashboardPage() {
             <p className="text-lg text-gray-600">
               Your reflection isn't done yet.
             </p>
-            <button
-              className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 font-medium"
-              disabled
+            <a
+              href="/reflection"
+              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 font-medium"
             >
               Start Reflection
-            </button>
-            <p className="text-xs text-gray-500 mt-2">
-              (Coming in Chunk 6)
-            </p>
+            </a>
           </div>
         )}
 
