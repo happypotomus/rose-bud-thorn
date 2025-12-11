@@ -105,6 +105,17 @@ export default async function DashboardPage() {
     dashboardState = 'unlocked'
   }
 
+  // Explicitly map reflection data to ensure proper serialization when passing to client component
+  const reflectionData = reflection ? {
+    rose_text: reflection.rose_text ?? null,
+    bud_text: reflection.bud_text ?? null,
+    thorn_text: reflection.thorn_text ?? null,
+    rose_transcript: reflection.rose_transcript ?? null,
+    bud_transcript: reflection.bud_transcript ?? null,
+    thorn_transcript: reflection.thorn_transcript ?? null,
+    submitted_at: reflection.submitted_at ?? null,
+  } : null
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
       <div className="text-center max-w-md w-full">
@@ -128,7 +139,7 @@ export default async function DashboardPage() {
         )}
 
         {/* State 2: Reflection submitted but circle not unlocked */}
-        {dashboardState === 'waiting' && reflection && (
+        {dashboardState === 'waiting' && reflectionData && (
           <div className="space-y-4">
             <p className="text-lg text-gray-600">
               Your reflection is complete.
@@ -138,7 +149,7 @@ export default async function DashboardPage() {
             </p>
             <div className="pt-2">
               <ExportReflection 
-                reflection={reflection}
+                reflection={reflectionData}
                 weekStartDate={new Date(currentWeek.start_at)}
                 weekEndDate={new Date(currentWeek.end_at)}
               />
@@ -150,10 +161,10 @@ export default async function DashboardPage() {
         {dashboardState === 'unlocked' && (
           <div className="space-y-4">
             <ReadingStatus weekId={currentWeek.id} isUnlocked={isUnlocked} />
-            {reflection && (
+            {reflectionData && (
               <div className="pt-2">
                 <ExportReflection 
-                  reflection={reflection}
+                  reflection={reflectionData}
                   weekStartDate={new Date(currentWeek.start_at)}
                   weekEndDate={new Date(currentWeek.end_at)}
                 />

@@ -289,17 +289,62 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
     - Error handling with retry/discard
     - Audio playback in review step
 
-13. Chunk 13 – GPT transcription + cleaned transcript
+13. Chunk 13 – GPT transcription + cleaned transcript + export feature
     - OpenAI Whisper API integration for transcription (`lib/openai/transcribe.ts`)
-    - GPT-4o-mini for transcript cleaning and formatting
+    - GPT-4o-mini for transcript cleaning (removes filler words: um, uh, etc.)
     - Transcription API route (`/api/transcribe-audio`)
     - Automatic transcription trigger after reflection submission
     - Reading UI with audio player and "View Transcribed Version" toggle
     - Transcript display with error handling
+    - Export reflection feature (`app/dashboard/export-reflection.tsx`)
+      - Copy to clipboard
+      - Download as text (.txt)
+      - Download as Markdown (.md)
+      - Combines text + transcripts (prefers text, falls back to cleaned transcript)
 
 **Next chunk (not started yet):**
 
 - **Chunk 14 – Polishing + small QA**
+  - Ensure all flows respect one circle per user, mid-week join behavior, linear reading sequence, all three dashboard states
+  - Add basic loading/error states
+  - Confirm RLS isn't blocking normal use
+  - Clean up routes, components, and environment variable usage
+  - Final README with: how to run dev, how to seed circles, how to run cron manually in dev
+
+---
+
+## 📋 Chunk Completion Checklist
+
+### ✅ Completed Chunks (1-13)
+
+- [x] **Chunk 1** – Repo + env wiring
+- [x] **Chunk 2** – Supabase schema (DB only, no UI yet)
+- [x] **Chunk 3** – Auth + Invite Flow
+- [x] **Chunk 4** – Week model + `currentWeek`
+- [x] **Chunk 5** – Basic dashboard states
+- [x] **Chunk 6** – Reflection wizard (text-only)
+- [x] **Chunk 7** – Real unlock logic (no SMS yet)
+- [x] **Chunk 8** – Friend reading flow (text-only)
+- [x] **Chunk 9** – Twilio + SMS sending service (manual test)
+- [x] **Chunk 10** – Supabase cron + reminder SMS
+- [x] **Chunk 11** – Real-time unlock SMS
+- [x] **Chunk 12** – Voice recording + Supabase Storage
+- [x] **Chunk 13** – GPT transcription + cleaned transcript + export feature
+
+### ⏳ Remaining Chunks
+
+- [ ] **Chunk 14** – Polishing + small QA
+
+---
+
+## 🎯 Quick Status Summary
+
+**Completed:** 13 of 14 chunks (93% complete)
+
+**Remaining Work:**
+- Final polish and QA
+- Documentation (README)
+- Edge case verification
 
 ---
 
