@@ -37,3 +37,4 @@ echo "      supabase secrets set TWILIO_ACCOUNT_SID=your-sid --project-ref $PROJ
 echo "      supabase secrets set TWILIO_AUTH_TOKEN=your-token --project-ref $PROJECT_REF"
 echo "      supabase secrets set TWILIO_PHONE_NUMBER=your-number --project-ref $PROJECT_REF"
 
+

@@ -5,11 +5,15 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getCurrentWeekClient } from '@/lib/supabase/week'
+import { AudioRecorder } from '@/components/audio-recorder'
 
 type ReflectionDraft = {
   rose: string
   bud: string
   thorn: string
+  rose_audio_url?: string | null
+  bud_audio_url?: string | null
+  thorn_audio_url?: string | null
 }
 
 type Step = 'rose' | 'bud' | 'thorn' | 'review'
@@ -27,9 +31,13 @@ export default function ReflectionPage() {
     rose: '',
     bud: '',
     thorn: '',
+    rose_audio_url: null,
+    bud_audio_url: null,
+    thorn_audio_url: null,
   })
   const [weekId, setWeekId] = useState<string | null>(null)
   const [circleId, setCircleId] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
 
   // Load draft from localStorage and get week/circle info
   useEffect(() => {
@@ -47,6 +55,7 @@ export default function ReflectionPage() {
       // Get user's circle
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
+        setUserId(user.id)
         const { data: membership } = await supabase
           .from('circle_members')
           .select('circle_id')
@@ -84,6 +93,15 @@ export default function ReflectionPage() {
 
   const updateDraft = (field: keyof ReflectionDraft, value: string) => {
     setDraft(prev => ({ ...prev, [field]: value }))
+  }
+
+  const updateAudioUrl = (section: 'rose' | 'bud' | 'thorn', url: string | null) => {
+    const field = `${section}_audio_url` as keyof ReflectionDraft
+    setDraft(prev => ({ ...prev, [field]: url }))
+  }
+
+  const handleDiscardAudio = (section: 'rose' | 'bud' | 'thorn') => {
+    updateAudioUrl(section, null)
   }
 
   const canProceed = (step: Step): boolean => {
@@ -149,6 +167,9 @@ export default function ReflectionPage() {
           rose_text: draft.rose.trim(),
           bud_text: draft.bud.trim(),
           thorn_text: draft.thorn.trim(),
+          rose_audio_url: draft.rose_audio_url || null,
+          bud_audio_url: draft.bud_audio_url || null,
+          thorn_audio_url: draft.thorn_audio_url || null,
           submitted_at: new Date().toISOString(),
         })
 
@@ -158,6 +179,17 @@ export default function ReflectionPage() {
         setLoading(false)
         return
       }
+
+      // Check if circle is unlocked and send unlock SMS if needed
+      // This is fire-and-forget - we don't wait for it to complete
+      fetch('/api/send-unlock-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ circleId, weekId }),
+      }).catch((err) => {
+        // Log error but don't block the user flow
+        console.error('Error sending unlock SMS:', err)
+      })
 
       // Clear draft from localStorage
       if (weekId) {
@@ -238,6 +270,16 @@ export default function ReflectionPage() {
                 placeholder="Share what went well this week..."
                 className="w-full h-48 p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               />
+              {userId && weekId && (
+                <AudioRecorder
+                  onAudioUploaded={(url) => updateAudioUrl('rose', url)}
+                  onDiscard={() => handleDiscardAudio('rose')}
+                  existingAudioUrl={draft.rose_audio_url}
+                  userId={userId}
+                  weekId={weekId}
+                  section="rose"
+                />
+              )}
             </div>
           )}
 
@@ -249,6 +291,16 @@ export default function ReflectionPage() {
                 placeholder="What's emerging or full of potential?"
                 className="w-full h-48 p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               />
+              {userId && weekId && (
+                <AudioRecorder
+                  onAudioUploaded={(url) => updateAudioUrl('bud', url)}
+                  onDiscard={() => handleDiscardAudio('bud')}
+                  existingAudioUrl={draft.bud_audio_url}
+                  userId={userId}
+                  weekId={weekId}
+                  section="bud"
+                />
+              )}
             </div>
           )}
 
@@ -260,6 +312,16 @@ export default function ReflectionPage() {
                 placeholder="What was challenging this week?"
                 className="w-full h-48 p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               />
+              {userId && weekId && (
+                <AudioRecorder
+                  onAudioUploaded={(url) => updateAudioUrl('thorn', url)}
+                  onDiscard={() => handleDiscardAudio('thorn')}
+                  existingAudioUrl={draft.thorn_audio_url}
+                  userId={userId}
+                  weekId={weekId}
+                  section="thorn"
+                />
+              )}
             </div>
           )}
 
@@ -267,21 +329,30 @@ export default function ReflectionPage() {
             <div className="space-y-6">
               <div>
                 <h3 className="font-semibold text-lg mb-2">Rose</h3>
-                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded">
+                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded mb-2">
                   {draft.rose || '(empty)'}
                 </p>
+                {draft.rose_audio_url && (
+                  <audio src={draft.rose_audio_url} controls className="w-full" />
+                )}
               </div>
               <div>
                 <h3 className="font-semibold text-lg mb-2">Bud</h3>
-                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded">
+                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded mb-2">
                   {draft.bud || '(empty)'}
                 </p>
+                {draft.bud_audio_url && (
+                  <audio src={draft.bud_audio_url} controls className="w-full" />
+                )}
               </div>
               <div>
                 <h3 className="font-semibold text-lg mb-2">Thorn</h3>
-                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded">
+                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded mb-2">
                   {draft.thorn || '(empty)'}
                 </p>
+                {draft.thorn_audio_url && (
+                  <audio src={draft.thorn_audio_url} controls className="w-full" />
+                )}
               </div>
             </div>
           )}

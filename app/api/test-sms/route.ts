@@ -8,6 +8,26 @@ import { sendSMS } from '@/lib/twilio/sms'
  */
 export async function POST(request: NextRequest) {
   try {
+    // Check environment variables first (for debugging)
+    const hasAccountSid = !!process.env.TWILIO_ACCOUNT_SID
+    const hasAuthToken = !!process.env.TWILIO_AUTH_TOKEN
+    const hasPhoneNumber = !!process.env.TWILIO_PHONE_NUMBER
+
+    if (!hasAccountSid || !hasAuthToken || !hasPhoneNumber) {
+      const missing = []
+      if (!hasAccountSid) missing.push('TWILIO_ACCOUNT_SID')
+      if (!hasAuthToken) missing.push('TWILIO_AUTH_TOKEN')
+      if (!hasPhoneNumber) missing.push('TWILIO_PHONE_NUMBER')
+      
+      return NextResponse.json(
+        {
+          error: 'Missing Twilio credentials',
+          details: `Missing environment variables: ${missing.join(', ')}. Please check your .env.local file and restart the dev server.`,
+        },
+        { status: 500 }
+      )
+    }
+
     const { phoneNumber } = await request.json()
 
     if (!phoneNumber) {
@@ -35,11 +55,17 @@ export async function POST(request: NextRequest) {
       message: 'Test SMS sent successfully',
     })
   } catch (error: any) {
-    console.error('Test SMS error:', error)
+    console.error('Test SMS error:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      status: error.status,
+    })
+    
     return NextResponse.json(
       {
         error: 'Failed to send test SMS',
-        details: error.message,
+        details: error.message || 'Unknown error occurred',
       },
       { status: 500 }
     )

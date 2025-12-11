@@ -270,9 +270,28 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
     - Uses Twilio REST API directly in Edge Functions (Deno environment)
     - Logs all notifications to `notification_logs` table
 
+**Completed chunks (continued):**
+
+11. Chunk 11 – Real-time unlock SMS
+    - Unlock SMS utility (`lib/supabase/unlock-sms.ts`)
+    - API route (`/api/send-unlock-sms`)
+    - Integrated into reflection submission flow
+    - Sends SMS to all circle members when everyone has submitted
+    - Logs to `notification_logs` with type `unlock`
+
+**Completed chunks (continued):**
+
+12. Chunk 12 – Voice recording + Supabase Storage
+    - Audio recorder component (`components/audio-recorder.tsx`)
+    - MediaRecorder API integration
+    - Supabase Storage upload functionality
+    - Audio URLs saved in draft and database
+    - Error handling with retry/discard
+    - Audio playback in review step
+
 **Next chunk (not started yet):**
 
-- **Chunk 11 – Real-time unlock SMS**
+- **Chunk 13 – GPT transcription + cleaned transcript**
 
 ---
 

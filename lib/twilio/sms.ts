@@ -12,7 +12,11 @@ export async function sendSMS(to: string, message: string): Promise<string> {
   const fromNumber = process.env.TWILIO_PHONE_NUMBER
 
   if (!accountSid || !authToken || !fromNumber) {
-    throw new Error('Missing Twilio credentials. Please check your environment variables.')
+    const missing = []
+    if (!accountSid) missing.push('TWILIO_ACCOUNT_SID')
+    if (!authToken) missing.push('TWILIO_AUTH_TOKEN')
+    if (!fromNumber) missing.push('TWILIO_PHONE_NUMBER')
+    throw new Error(`Missing Twilio credentials: ${missing.join(', ')}. Please check your environment variables.`)
   }
 
   const client = twilio(accountSid, authToken)

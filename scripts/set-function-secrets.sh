@@ -58,3 +58,4 @@ echo ""
 echo "You can verify by running:"
 echo "  supabase secrets list --project-ref $PROJECT_REF"
 
+

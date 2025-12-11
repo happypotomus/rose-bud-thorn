@@ -245,3 +245,4 @@ Once testing is complete, you can set up real cron jobs in Supabase:
 - Service role key is required to bypass RLS for system operations
 - All notifications are logged to `notification_logs` for audit trail
 
+

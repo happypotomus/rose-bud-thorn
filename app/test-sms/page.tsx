@@ -24,7 +24,10 @@ export default function TestSMSPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || data.details || 'Failed to send SMS')
+        // Show detailed error message
+        const errorMsg = data.details || data.error || 'Failed to send SMS'
+        setError(errorMsg)
+        console.error('SMS API error:', data)
         return
       }
 
