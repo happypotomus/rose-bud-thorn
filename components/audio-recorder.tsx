@@ -115,9 +115,10 @@ export function AudioRecorder({
       const supabase = createClient()
       
       // Generate unique filename
+      // Path structure: {userId}/{weekId}/{section}_{timestamp}.webm
+      // This matches the RLS policy that checks the first folder = userId
       const timestamp = Date.now()
-      const filename = `${userId}/${weekId}/${section}_${timestamp}.webm`
-      const filePath = `reflections/${filename}`
+      const filePath = `${userId}/${weekId}/${section}_${timestamp}.webm`
 
       // Upload to Supabase Storage
       const { data, error: uploadError } = await supabase.storage

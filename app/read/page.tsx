@@ -13,6 +13,12 @@ type FriendReflection = {
   rose_text: string
   bud_text: string
   thorn_text: string
+  rose_audio_url: string | null
+  bud_audio_url: string | null
+  thorn_audio_url: string | null
+  rose_transcript: string | null
+  bud_transcript: string | null
+  thorn_transcript: string | null
 }
 
 export default function ReadPage() {
@@ -25,6 +31,15 @@ export default function ReadPage() {
   const [weekId, setWeekId] = useState<string | null>(null)
   const [circleId, setCircleId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showTranscripts, setShowTranscripts] = useState<{
+    rose: boolean
+    bud: boolean
+    thorn: boolean
+  }>({
+    rose: false,
+    bud: false,
+    thorn: false,
+  })
 
   useEffect(() => {
     const loadReflections = async () => {
@@ -83,7 +98,13 @@ export default function ReadPage() {
             user_id,
             rose_text,
             bud_text,
-            thorn_text
+            thorn_text,
+            rose_audio_url,
+            bud_audio_url,
+            thorn_audio_url,
+            rose_transcript,
+            bud_transcript,
+            thorn_transcript
           `)
           .eq('circle_id', membership.circle_id)
           .eq('week_id', week.id)
@@ -121,6 +142,12 @@ export default function ReadPage() {
             rose_text: r.rose_text || '',
             bud_text: r.bud_text || '',
             thorn_text: r.thorn_text || '',
+            rose_audio_url: r.rose_audio_url || null,
+            bud_audio_url: r.bud_audio_url || null,
+            thorn_audio_url: r.thorn_audio_url || null,
+            rose_transcript: r.rose_transcript || null,
+            bud_transcript: r.bud_transcript || null,
+            thorn_transcript: r.thorn_transcript || null,
           }))
           .sort((a, b) => a.first_name.localeCompare(b.first_name))
 
@@ -151,12 +178,21 @@ export default function ReadPage() {
 
   const handleContinue = () => {
     if (currentIndex < friends.length - 1) {
+      // Reset transcript visibility when moving to next friend
+      setShowTranscripts({ rose: false, bud: false, thorn: false })
       handleNext()
     } else {
       // Last friend - mark as read and show bloom screen
       markAsRead()
       setCurrentIndex(friends.length) // This triggers the bloom screen condition
     }
+  }
+
+  const toggleTranscript = (section: 'rose' | 'bud' | 'thorn') => {
+    setShowTranscripts((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }))
   }
 
   if (loading) {
@@ -228,25 +264,100 @@ export default function ReadPage() {
           </h2>
 
           <div className="space-y-6">
+            {/* Rose Section */}
             <div>
               <h3 className="font-semibold text-lg mb-2 text-rose-600">🌹 Rose</h3>
-              <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded">
+              <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded mb-2">
                 {currentFriend.rose_text || '(No response)'}
               </p>
+              {currentFriend.rose_audio_url && (
+                <div className="mt-3 space-y-2">
+                  <audio src={currentFriend.rose_audio_url} controls className="w-full" />
+                  <button
+                    onClick={() => toggleTranscript('rose')}
+                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                  >
+                    {showTranscripts.rose ? 'Hide Transcribed Version' : 'View Transcribed Version'}
+                  </button>
+                  {showTranscripts.rose && (
+                    <div className="mt-2 p-3 bg-blue-50 rounded border border-blue-200">
+                      {currentFriend.rose_transcript ? (
+                        <p className="text-gray-700 whitespace-pre-wrap text-sm">
+                          {currentFriend.rose_transcript}
+                        </p>
+                      ) : (
+                        <p className="text-gray-600 italic text-sm">
+                          We couldn't generate a transcript for this recording. Please listen to the audio instead.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
+            {/* Bud Section */}
             <div>
               <h3 className="font-semibold text-lg mb-2 text-green-600">🌱 Bud</h3>
-              <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded">
+              <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded mb-2">
                 {currentFriend.bud_text || '(No response)'}
               </p>
+              {currentFriend.bud_audio_url && (
+                <div className="mt-3 space-y-2">
+                  <audio src={currentFriend.bud_audio_url} controls className="w-full" />
+                  <button
+                    onClick={() => toggleTranscript('bud')}
+                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                  >
+                    {showTranscripts.bud ? 'Hide Transcribed Version' : 'View Transcribed Version'}
+                  </button>
+                  {showTranscripts.bud && (
+                    <div className="mt-2 p-3 bg-blue-50 rounded border border-blue-200">
+                      {currentFriend.bud_transcript ? (
+                        <p className="text-gray-700 whitespace-pre-wrap text-sm">
+                          {currentFriend.bud_transcript}
+                        </p>
+                      ) : (
+                        <p className="text-gray-600 italic text-sm">
+                          We couldn't generate a transcript for this recording. Please listen to the audio instead.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
+            {/* Thorn Section */}
             <div>
               <h3 className="font-semibold text-lg mb-2 text-orange-600">🌵 Thorn</h3>
-              <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded">
+              <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded mb-2">
                 {currentFriend.thorn_text || '(No response)'}
               </p>
+              {currentFriend.thorn_audio_url && (
+                <div className="mt-3 space-y-2">
+                  <audio src={currentFriend.thorn_audio_url} controls className="w-full" />
+                  <button
+                    onClick={() => toggleTranscript('thorn')}
+                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                  >
+                    {showTranscripts.thorn ? 'Hide Transcribed Version' : 'View Transcribed Version'}
+                  </button>
+                  {showTranscripts.thorn && (
+                    <div className="mt-2 p-3 bg-blue-50 rounded border border-blue-200">
+                      {currentFriend.thorn_transcript ? (
+                        <p className="text-gray-700 whitespace-pre-wrap text-sm">
+                          {currentFriend.thorn_transcript}
+                        </p>
+                      ) : (
+                        <p className="text-gray-600 italic text-sm">
+                          We couldn't generate a transcript for this recording. Please listen to the audio instead.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

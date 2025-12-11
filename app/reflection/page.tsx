@@ -107,11 +107,12 @@ export default function ReflectionPage() {
   const canProceed = (step: Step): boolean => {
     switch (step) {
       case 'rose':
-        return draft.rose.trim().length > 0
+        // Allow proceeding if either text or audio exists
+        return draft.rose.trim().length > 0 || !!draft.rose_audio_url
       case 'bud':
-        return draft.bud.trim().length > 0
+        return draft.bud.trim().length > 0 || !!draft.bud_audio_url
       case 'thorn':
-        return draft.thorn.trim().length > 0
+        return draft.thorn.trim().length > 0 || !!draft.thorn_audio_url
       default:
         return false
     }
@@ -141,8 +142,13 @@ export default function ReflectionPage() {
       return
     }
 
-    if (!draft.rose.trim() || !draft.bud.trim() || !draft.thorn.trim()) {
-      setError('Please complete all three sections before submitting.')
+    // Validate that each section has either text or audio
+    const hasRose = draft.rose.trim().length > 0 || !!draft.rose_audio_url
+    const hasBud = draft.bud.trim().length > 0 || !!draft.bud_audio_url
+    const hasThorn = draft.thorn.trim().length > 0 || !!draft.thorn_audio_url
+    
+    if (!hasRose || !hasBud || !hasThorn) {
+      setError('Please complete all three sections (text or audio) before submitting.')
       return
     }
 
@@ -158,7 +164,7 @@ export default function ReflectionPage() {
       }
 
       // Submit reflection
-      const { error: submitError } = await supabase
+      const { data: insertedReflection, error: submitError } = await supabase
         .from('reflections')
         .insert({
           circle_id: circleId,
@@ -172,12 +178,30 @@ export default function ReflectionPage() {
           thorn_audio_url: draft.thorn_audio_url || null,
           submitted_at: new Date().toISOString(),
         })
+        .select('id')
+        .single()
 
-      if (submitError) {
+      if (submitError || !insertedReflection) {
         console.error('Submission error:', submitError)
-        setError(submitError.message || 'Failed to submit reflection. Please try again.')
+        setError(submitError?.message || 'Failed to submit reflection. Please try again.')
         setLoading(false)
         return
+      }
+
+      // Trigger transcription if any audio URLs exist (fire-and-forget)
+      // The API will fetch audio URLs from the database
+      const hasAudio = draft.rose_audio_url || draft.bud_audio_url || draft.thorn_audio_url
+      if (hasAudio) {
+        fetch('/api/transcribe-audio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reflectionId: insertedReflection.id,
+          }),
+        }).catch((err) => {
+          // Log error but don't block the user flow
+          console.error('Error triggering transcription:', err)
+        })
       }
 
       // Check if circle is unlocked and send unlock SMS if needed
@@ -371,7 +395,12 @@ export default function ReflectionPage() {
           {currentStep === 'review' ? (
             <button
               onClick={handleSubmit}
-              disabled={loading || !draft.rose.trim() || !draft.bud.trim() || !draft.thorn.trim()}
+              disabled={
+                loading || 
+                (!draft.rose.trim() && !draft.rose_audio_url) ||
+                (!draft.bud.trim() && !draft.bud_audio_url) ||
+                (!draft.thorn.trim() && !draft.thorn_audio_url)
+              }
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Submitting...' : 'Submit Reflection'}

@@ -289,9 +289,17 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
     - Error handling with retry/discard
     - Audio playback in review step
 
+13. Chunk 13 – GPT transcription + cleaned transcript
+    - OpenAI Whisper API integration for transcription (`lib/openai/transcribe.ts`)
+    - GPT-4o-mini for transcript cleaning and formatting
+    - Transcription API route (`/api/transcribe-audio`)
+    - Automatic transcription trigger after reflection submission
+    - Reading UI with audio player and "View Transcribed Version" toggle
+    - Transcript display with error handling
+
 **Next chunk (not started yet):**
 
-- **Chunk 13 – GPT transcription + cleaned transcript**
+- **Chunk 14 – Polishing + small QA**
 
 ---
 

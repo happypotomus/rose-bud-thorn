@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentWeek } from '@/lib/supabase/week-server'
 import { isCircleUnlocked } from '@/lib/supabase/unlock'
 import { ReadingStatus } from './reading-status'
+import { ExportReflection } from './export-reflection'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -70,7 +71,16 @@ export default async function DashboardPage() {
   // Check if user has a reflection for current week
   const { data: reflection } = await supabase
     .from('reflections')
-    .select('id, submitted_at')
+    .select(`
+      id, 
+      submitted_at,
+      rose_text,
+      bud_text,
+      thorn_text,
+      rose_transcript,
+      bud_transcript,
+      thorn_transcript
+    `)
     .eq('user_id', user.id)
     .eq('circle_id', circleId)
     .eq('week_id', currentWeek.id)
@@ -118,7 +128,7 @@ export default async function DashboardPage() {
         )}
 
         {/* State 2: Reflection submitted but circle not unlocked */}
-        {dashboardState === 'waiting' && (
+        {dashboardState === 'waiting' && reflection && (
           <div className="space-y-4">
             <p className="text-lg text-gray-600">
               Your reflection is complete.
@@ -126,12 +136,30 @@ export default async function DashboardPage() {
             <p className="text-sm text-gray-500">
               We'll text you when everyone is done.
             </p>
+            <div className="pt-2">
+              <ExportReflection 
+                reflection={reflection}
+                weekStartDate={new Date(currentWeek.start_at)}
+                weekEndDate={new Date(currentWeek.end_at)}
+              />
+            </div>
           </div>
         )}
 
         {/* State 3: Circle unlocked */}
         {dashboardState === 'unlocked' && (
-          <ReadingStatus weekId={currentWeek.id} isUnlocked={isUnlocked} />
+          <div className="space-y-4">
+            <ReadingStatus weekId={currentWeek.id} isUnlocked={isUnlocked} />
+            {reflection && (
+              <div className="pt-2">
+                <ExportReflection 
+                  reflection={reflection}
+                  weekStartDate={new Date(currentWeek.start_at)}
+                  weekEndDate={new Date(currentWeek.end_at)}
+                />
+              </div>
+            )}
+          </div>
         )}
 
         {/* Debug info (can remove later) */}
