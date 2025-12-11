@@ -8,11 +8,13 @@ import { sendSMS } from '../twilio/sms'
  * 
  * @param circleId - The circle ID
  * @param weekId - The week ID
+ * @param baseUrl - The base URL of the app (for the link in SMS)
  * @returns Object with success status and details
  */
 export async function sendUnlockSMS(
   circleId: string,
-  weekId: string
+  weekId: string,
+  baseUrl?: string
 ): Promise<{ success: boolean; sent: number; errors: number; details?: any }> {
   // Use service role client to bypass RLS (needed for API routes)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -55,15 +57,44 @@ export async function sendUnlockSMS(
     return { success: false, sent: 0, errors: 0, details: profilesError }
   }
 
-  // Send unlock SMS to all members
-  const message = "Everyone in your circle has submitted! You can now read each other's reflections."
+  // Check which users have already received unlock SMS for this week
+  const { data: existingLogs } = await supabase
+    .from('notification_logs')
+    .select('user_id')
+    .eq('circle_id', circleId)
+    .eq('week_id', weekId)
+    .eq('type', 'unlock')
+
+  const usersWhoReceivedSMS = new Set(
+    existingLogs?.map(log => log.user_id) || []
+  )
+
+  // Filter out users who have already received the SMS
+  const profilesToNotify = profiles.filter(
+    profile => !usersWhoReceivedSMS.has(profile.id)
+  )
+
+  if (profilesToNotify.length === 0) {
+    // All users have already received the SMS
+    return { success: true, sent: 0, errors: 0, details: 'All users already notified' }
+  }
+
+  // Get app base URL for the link
+  // Use provided baseUrl, or fall back to environment variables
+  const appBaseUrl = baseUrl || 
+    process.env.NEXT_PUBLIC_APP_URL || 
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://your-app.vercel.app')
+  const readUrl = `${appBaseUrl}/read`
+
+  // Send unlock SMS to members who haven't received it yet
+  const message = `Everyone in your circle has submitted! You can now read each other's reflections. ${readUrl}`
   let sent = 0
   let errors = 0
   const results: any[] = []
 
-  for (const profile of profiles) {
+  for (const profile of profilesToNotify) {
     try {
-      // Send SMS
+      // Send SMS (phone number will be normalized inside sendSMS)
       const messageSid = await sendSMS(profile.phone, message)
 
       // Log to notification_logs

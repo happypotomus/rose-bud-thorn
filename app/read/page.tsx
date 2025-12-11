@@ -47,7 +47,9 @@ export default function ReadPage() {
         // Get current user
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) {
-          router.push('/dashboard')
+          // Redirect to invite page if not authenticated
+          // User will need to enter phone number and OTP to log in
+          router.push('/invite')
           return
         }
 
