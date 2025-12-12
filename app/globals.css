@@ -91,5 +91,33 @@
   .touch-manipulation {
     touch-action: manipulation;
   }
+  
+  /* Recording animation - pulsing concentric circles */
+  @keyframes recording-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(3);
+      opacity: 0;
+    }
+  }
+  
+  .recording-circle {
+    animation: recording-pulse 2s ease-out infinite;
+  }
+  
+  .recording-circle-1 {
+    animation-delay: 0s;
+  }
+  
+  .recording-circle-2 {
+    animation-delay: 0.4s;
+  }
+  
+  .recording-circle-3 {
+    animation-delay: 0.8s;
+  }
 }
 

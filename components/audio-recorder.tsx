@@ -12,7 +12,7 @@ type AudioRecorderProps = {
   section: 'rose' | 'bud' | 'thorn'
 }
 
-type RecordingState = 'idle' | 'recording' | 'stopped' | 'uploading' | 'uploaded' | 'error'
+type RecordingState = 'idle' | 'recording' | 'uploading' | 'uploaded' | 'error'
 
 export function AudioRecorder({
   onAudioUploaded,
@@ -68,16 +68,19 @@ export function AudioRecorder({
         }
       }
 
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
         setAudioBlob(blob)
         const url = URL.createObjectURL(blob)
         setAudioUrl(url)
-        setState('stopped')
+        setState('uploading')
         setRecordingTime(0)
         if (timerRef.current) {
           clearInterval(timerRef.current)
         }
+        
+        // Auto-upload immediately
+        await uploadAudio(blob)
       }
 
       mediaRecorder.start()
@@ -105,8 +108,9 @@ export function AudioRecorder({
     }
   }
 
-  const uploadAudio = async () => {
-    if (!audioBlob || !userId || !weekId) return
+  const uploadAudio = async (blobToUpload?: Blob) => {
+    const blob = blobToUpload || audioBlob
+    if (!blob || !userId || !weekId) return
 
     setState('uploading')
     setError(null)
@@ -115,15 +119,13 @@ export function AudioRecorder({
       const supabase = createClient()
       
       // Generate unique filename
-      // Path structure: {userId}/{weekId}/{section}_{timestamp}.webm
-      // This matches the RLS policy that checks the first folder = userId
       const timestamp = Date.now()
       const filePath = `${userId}/${weekId}/${section}_${timestamp}.webm`
 
       // Upload to Supabase Storage
       const { data, error: uploadError } = await supabase.storage
         .from('audio')
-        .upload(filePath, audioBlob, {
+        .upload(filePath, blob, {
           contentType: 'audio/webm',
           upsert: false,
         })
@@ -168,143 +170,168 @@ export function AudioRecorder({
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  return (
-    <div className="mt-4 sm:mt-6 space-y-4 sm:space-y-5">
-      {/* Recording controls */}
-      {state === 'idle' && (
+  // Idle state - circular white button with grey border
+  if (state === 'idle') {
+    return (
+      <button
+        onClick={startRecording}
+        className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-gray-300 bg-white flex items-center justify-center hover:bg-gray-50 transition-colors touch-manipulation"
+        aria-label="Start recording"
+      >
+        <svg
+          className="w-6 h-6 sm:w-8 sm:h-8 text-gray-700"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+          />
+        </svg>
+      </button>
+    )
+  }
+
+  // Recording state - animated red button with concentric circles
+  if (state === 'recording') {
+    return (
+      <div className="relative flex items-center justify-center">
+        {/* Concentric circles animation */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-600/30 recording-circle recording-circle-1" />
+          <div className="absolute w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-600/20 recording-circle recording-circle-2" />
+          <div className="absolute w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-600/10 recording-circle recording-circle-3" />
+        </div>
+        
+        {/* Red recording button */}
         <button
-          onClick={startRecording}
-          className="flex items-center justify-center gap-2 sm:gap-3 w-full sm:w-auto px-6 sm:px-5 py-3 sm:py-2.5 bg-red-600 text-white rounded-md hover:bg-red-700 text-base sm:text-sm font-medium"
+          onClick={stopRecording}
+          className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-600 flex items-center justify-center hover:bg-red-700 transition-colors touch-manipulation z-10"
+          aria-label="Stop recording"
         >
           <svg
-            className="w-5 h-5 sm:w-4 sm:h-4"
+            className="w-6 h-6 sm:w-8 sm:h-8 text-white"
             fill="currentColor"
             viewBox="0 0 20 20"
           >
             <path
               fillRule="evenodd"
-              d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v6a1 1 0 11-2 0V7zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V7a1 1 0 00-1-1z"
               clipRule="evenodd"
             />
           </svg>
-          Record
         </button>
-      )}
+      </div>
+    )
+  }
 
-      {state === 'recording' && (
-        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-red-600 rounded-full animate-pulse" />
-            <span className="font-mono text-lg sm:text-xl font-semibold">{formatTime(recordingTime)}</span>
-          </div>
-          <button
-            onClick={stopRecording}
-            className="w-full sm:w-auto px-6 sm:px-5 py-3 sm:py-2.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-base sm:text-sm font-medium"
-          >
-            Stop
-          </button>
-        </div>
-      )}
+  // Uploading state
+  if (state === 'uploading') {
+    return (
+      <div className="flex items-center justify-center gap-2 text-rose">
+        <svg
+          className="animate-spin h-5 w-5"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          />
+        </svg>
+        <span className="text-sm">Uploading...</span>
+      </div>
+    )
+  }
 
-      {/* Preview and upload */}
-      {state === 'stopped' && audioUrl && (
-        <div className="space-y-4 sm:space-y-3">
-          <audio src={audioUrl} controls className="w-full" />
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
+  // Uploaded/Recorded state - show recorded visual
+  if (state === 'uploaded' && audioUrl) {
+    return (
+      <div className="w-full max-w-md">
+        <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-300 rounded-lg bg-white">
+          {/* Left side: Play button + "Recorded" text */}
+          <div className="flex items-center gap-3">
             <button
-              onClick={uploadAudio}
-              className="w-full sm:w-auto px-6 sm:px-4 py-3 sm:py-2 bg-rose text-white rounded-md hover:bg-rose-dark active:bg-rose-dark text-base sm:text-sm font-medium transition-colors"
+              onClick={() => {
+                const audio = new Audio(audioUrl)
+                audio.play()
+              }}
+              className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
+              aria-label="Play recording"
             >
-              Keep & Upload
+              <svg
+                className="w-5 h-5 text-gray-700"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+              </svg>
             </button>
-            <button
-              onClick={handleDiscard}
-              className="w-full sm:w-auto px-6 sm:px-4 py-3 sm:py-2 border-2 border-gray-300 rounded-md hover:bg-gray-50 text-base sm:text-sm font-medium"
-            >
-              Discard
-            </button>
+            <span className="text-sm sm:text-base text-gray-600">Recorded</span>
           </div>
-        </div>
-      )}
-
-      {/* Uploading state */}
-      {state === 'uploading' && (
-        <div className="flex items-center gap-2 text-blue-600">
-          <svg
-            className="animate-spin h-5 w-5"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-          <span>Uploading...</span>
-        </div>
-      )}
-
-      {/* Uploaded state */}
-      {state === 'uploaded' && audioUrl && (
-        <div className="space-y-4 sm:space-y-3">
-          <div className="flex items-center gap-2 sm:gap-2 text-green-600">
-            <svg
-              className="w-5 h-5 sm:w-4 sm:h-4"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span className="text-base sm:text-sm font-medium">Audio uploaded</span>
-          </div>
-          <audio src={audioUrl} controls className="w-full" />
+          
+          {/* Right side: Delete icon */}
           <button
             onClick={handleDiscard}
-            className="w-full sm:w-auto px-6 sm:px-4 py-3 sm:py-2 border-2 border-gray-300 rounded-md hover:bg-gray-50 text-base sm:text-sm font-medium"
+            className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-red-50 transition-colors"
+            aria-label="Delete recording"
           >
-            Remove Audio
+            <svg
+              className="w-5 h-5 text-gray-700 hover:text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
           </button>
         </div>
-      )}
+      </div>
+    )
+  }
 
-      {/* Error state */}
-      {state === 'error' && error && (
-        <div className="space-y-4 sm:space-y-3">
-          <div className="bg-red-100 border-2 border-red-400 text-red-700 px-4 py-3 rounded text-sm sm:text-base">
-            {error}
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
-            <button
-              onClick={uploadAudio}
-              className="w-full sm:w-auto px-6 sm:px-4 py-3 sm:py-2 bg-rose text-white rounded-md hover:bg-rose-dark active:bg-rose-dark text-base sm:text-sm font-medium transition-colors"
-            >
-              Retry Upload
-            </button>
-            <button
-              onClick={handleDiscard}
-              className="w-full sm:w-auto px-6 sm:px-4 py-3 sm:py-2 border-2 border-gray-300 rounded-md hover:bg-gray-50 text-base sm:text-sm font-medium"
-            >
-              Discard Recording
-            </button>
-          </div>
+  // Error state
+  if (state === 'error' && error) {
+    return (
+      <div className="w-full max-w-md space-y-3">
+        <div className="bg-red-100 border-2 border-red-400 text-red-700 px-4 py-3 rounded text-sm">
+          {error}
         </div>
-      )}
-    </div>
-  )
+        <div className="flex gap-2 justify-center">
+          <button
+            onClick={() => uploadAudio()}
+            className="px-4 py-2 bg-rose text-white rounded-md hover:bg-rose-dark text-sm font-medium transition-colors"
+          >
+            Retry Upload
+          </button>
+          <button
+            onClick={handleDiscard}
+            className="px-4 py-2 border-2 border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium"
+          >
+            Discard
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return null
 }
-
-

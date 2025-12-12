@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getCurrentWeekClient } from '@/lib/supabase/week'
 import { AudioRecorder } from '@/components/audio-recorder'
+import { FlowerLogo } from '@/components/flower-logo'
 
 type ReflectionDraft = {
   rose: string
@@ -245,111 +246,19 @@ export default function ReflectionPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:p-12 md:p-24 pb-safe mb-safe">
+    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:p-12 md:p-24 pb-safe mb-safe bg-white">
       <div className="w-full max-w-3xl">
-        {/* Progress indicator */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex items-center justify-between mb-2">
-            {(['rose', 'bud', 'thorn', 'review'] as Step[]).map((step, index) => (
-              <div key={step} className="flex items-center flex-1">
-                <div
-                  className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full text-sm sm:text-base font-semibold ${
-                    currentStep === step
-                      ? 'bg-rose text-white'
-                      : steps.indexOf(currentStep) > index
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gray-200 text-gray-600'
-                  }`}
-                >
-                  {index + 1}
-                </div>
-                {index < 3 && (
-                  <div
-                    className={`flex-1 h-1.5 sm:h-2 mx-1 sm:mx-2 ${
-                      steps.indexOf(currentStep) > index ? 'bg-green-500' : 'bg-gray-200'
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
           </div>
-        </div>
+        )}
 
-        {/* Step content */}
-        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8 mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">{stepTitles[currentStep]}</h2>
-          <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">{stepDescriptions[currentStep]}</p>
-
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-              {error}
-            </div>
-          )}
-
-          {currentStep === 'rose' && (
-            <div className="space-y-4 sm:space-y-6">
-              <textarea
-                value={draft.rose}
-                onChange={(e) => updateDraft('rose', e.target.value)}
-                placeholder="Share what went well this week..."
-                className="w-full min-h-[180px] sm:min-h-[200px] md:h-48 p-4 sm:p-5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-rose focus:border-transparent resize-none"
-              />
-              {userId && weekId && (
-                <AudioRecorder
-                  onAudioUploaded={(url) => updateAudioUrl('rose', url)}
-                  onDiscard={() => handleDiscardAudio('rose')}
-                  existingAudioUrl={draft.rose_audio_url}
-                  userId={userId}
-                  weekId={weekId}
-                  section="rose"
-                />
-              )}
-            </div>
-          )}
-
-          {currentStep === 'bud' && (
-            <div className="space-y-4 sm:space-y-6">
-              <textarea
-                value={draft.bud}
-                onChange={(e) => updateDraft('bud', e.target.value)}
-                placeholder="What's emerging or full of potential?"
-                className="w-full min-h-[180px] sm:min-h-[200px] md:h-48 p-4 sm:p-5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-rose focus:border-transparent resize-none"
-              />
-              {userId && weekId && (
-                <AudioRecorder
-                  onAudioUploaded={(url) => updateAudioUrl('bud', url)}
-                  onDiscard={() => handleDiscardAudio('bud')}
-                  existingAudioUrl={draft.bud_audio_url}
-                  userId={userId}
-                  weekId={weekId}
-                  section="bud"
-                />
-              )}
-            </div>
-          )}
-
-          {currentStep === 'thorn' && (
-            <div className="space-y-4 sm:space-y-6">
-              <textarea
-                value={draft.thorn}
-                onChange={(e) => updateDraft('thorn', e.target.value)}
-                placeholder="What was challenging this week?"
-                className="w-full min-h-[180px] sm:min-h-[200px] md:h-48 p-4 sm:p-5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-rose focus:border-transparent resize-none"
-              />
-              {userId && weekId && (
-                <AudioRecorder
-                  onAudioUploaded={(url) => updateAudioUrl('thorn', url)}
-                  onDiscard={() => handleDiscardAudio('thorn')}
-                  existingAudioUrl={draft.thorn_audio_url}
-                  userId={userId}
-                  weekId={weekId}
-                  section="thorn"
-                />
-              )}
-            </div>
-          )}
-
-          {currentStep === 'review' && (
+        {/* Review step - keep existing layout */}
+        {currentStep === 'review' && (
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8 mb-6 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">Review</h2>
+            <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">Review your reflection before submitting</p>
             <div className="space-y-6 sm:space-y-8">
               <div>
                 <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4">Rose</h3>
@@ -409,20 +318,80 @@ export default function ReflectionPage() {
                 )}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Navigation buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:justify-between pb-4 sm:pb-0">
-          <button
-            onClick={handleBack}
-            disabled={currentStep === 'rose' || loading}
-            className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3 text-base sm:text-lg border-2 border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-          >
-            Back
-          </button>
+        {/* Rose, Bud, Thorn steps - new clean layout */}
+        {(currentStep === 'rose' || currentStep === 'bud' || currentStep === 'thorn') && (
+          <div className="text-center space-y-6 sm:space-y-8">
+            {/* Flower icon */}
+            <div className="flex justify-center">
+              <div className="relative">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-rose-200 flex items-center justify-center bg-white">
+                  <FlowerLogo size={48} className="sm:w-14 sm:h-14" />
+                </div>
+              </div>
+            </div>
 
-          {currentStep === 'review' ? (
+            {/* Step title in pink */}
+            <h2 className="text-2xl sm:text-3xl font-bold text-rose">{stepTitles[currentStep]}</h2>
+
+            {/* Question prompt */}
+            <p className="text-xl sm:text-2xl md:text-3xl font-bold text-black">
+              {stepDescriptions[currentStep]}
+            </p>
+
+            {/* Text area */}
+            <div className="text-left">
+              <textarea
+                value={draft[currentStep]}
+                onChange={(e) => updateDraft(currentStep, e.target.value)}
+                placeholder="Share your thoughts..."
+                className="w-full min-h-[200px] sm:min-h-[240px] p-4 sm:p-5 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose focus:border-transparent resize-none"
+              />
+            </div>
+
+            {/* Next button */}
+            <div className="flex justify-center">
+              <button
+                onClick={handleNext}
+                disabled={!canProceed(currentStep) || loading}
+                className="w-full sm:w-auto bg-rose text-white px-8 sm:px-10 py-3 sm:py-3.5 rounded-lg hover:bg-rose-dark active:bg-rose-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base sm:text-lg transition-colors touch-manipulation min-h-[44px] flex items-center justify-center gap-2"
+              >
+                Next
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Audio recorder - positioned below Next button */}
+            {userId && weekId && (
+              <div className="flex justify-center">
+                <AudioRecorder
+                  onAudioUploaded={(url) => updateAudioUrl(currentStep, url)}
+                  onDiscard={() => handleDiscardAudio(currentStep)}
+                  existingAudioUrl={draft[`${currentStep}_audio_url` as keyof ReflectionDraft] as string | null}
+                  userId={userId}
+                  weekId={weekId}
+                  section={currentStep}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Navigation buttons - only show for review step */}
+        {currentStep === 'review' && (
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:justify-between pb-4 sm:pb-0">
+            <button
+              onClick={handleBack}
+              disabled={loading}
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3 text-base sm:text-lg border-2 border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            >
+              Back
+            </button>
+
             <button
               onClick={handleSubmit}
               disabled={
@@ -435,16 +404,8 @@ export default function ReflectionPage() {
             >
               {loading ? 'Submitting...' : 'Submit Reflection'}
             </button>
-          ) : (
-            <button
-              onClick={handleNext}
-              disabled={!canProceed(currentStep) || loading}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3 text-base sm:text-lg bg-rose text-white rounded-md hover:bg-rose-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            >
-              Next
-            </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </main>
   )
