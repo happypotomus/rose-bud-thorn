@@ -363,7 +363,7 @@ export default function ReflectionPage() {
             </div>
 
             {/* Navigation buttons */}
-            <div className="flex flex-row gap-3 sm:gap-4">
+            <div className={`flex flex-row gap-3 sm:gap-4 ${currentStep === 'rose' ? 'justify-center' : ''}`}>
               {/* Back button - show for bud and thorn */}
               {currentStep !== 'rose' ? (
                 <button
@@ -376,15 +376,13 @@ export default function ReflectionPage() {
                   </svg>
                   Back
                 </button>
-              ) : (
-                <div className="flex-1" />
-              )}
+              ) : null}
               
               {/* Next button */}
               <button
                 onClick={handleNext}
                 disabled={!canProceed(currentStep) || loading}
-                className="flex-1 bg-rose text-white px-8 sm:px-10 py-3 sm:py-3.5 rounded-lg hover:bg-rose-dark active:bg-rose-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base sm:text-lg transition-colors touch-manipulation min-h-[44px] flex items-center justify-center gap-2"
+                className={`${currentStep === 'rose' ? 'px-8 sm:px-10' : 'flex-1'} bg-rose text-white py-3 sm:py-3.5 rounded-lg hover:bg-rose-dark active:bg-rose-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base sm:text-lg transition-colors touch-manipulation min-h-[44px] flex items-center justify-center gap-2`}
               >
                 Next
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
