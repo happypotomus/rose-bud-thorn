@@ -213,10 +213,10 @@ export default function ReadPage() {
         <div className="text-center w-full max-w-2xl">
           <p className="text-base sm:text-lg text-red-600 mb-4 sm:mb-6">{error}</p>
           <Link
-            href="/dashboard"
+            href="/home"
             className="text-base sm:text-lg text-blue-600 hover:underline"
           >
-            Return to dashboard
+            Return to home
           </Link>
         </div>
       </main>
@@ -236,10 +236,10 @@ export default function ReadPage() {
             You're all caught up.
           </p>
           <Link
-            href="/dashboard"
+            href="/home"
             className="inline-block w-full sm:w-auto bg-rose text-white px-6 sm:px-8 py-3 text-base sm:text-lg rounded-md hover:bg-rose-dark font-medium"
           >
-            Return to Dashboard
+            Return to Home
           </Link>
         </div>
       </main>

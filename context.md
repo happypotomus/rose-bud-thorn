@@ -100,7 +100,7 @@ Behavior:
 
 - For a given “now”, it finds a `weeks` row where `start_at <= now < end_at`.  
 - If none exists, it **creates** the appropriate week (Sunday 7pm start, next Sunday 6:59pm end).  
-- Dashboard & reflection wizard rely on this to know which `week_id` to use.
+- Home & reflection wizard rely on this to know which `week_id` to use.
 
 ---
 
@@ -124,11 +124,11 @@ Behavior:
    - `profiles` row is created/updated with `first_name` + `phone`.  
    - Membership added to `circle_members` using `invite_token`.  
    - **“One circle per user”** enforced via `UNIQUE(user_id)` and logic in callback.  
-5. User is redirected to `/dashboard`.
+5. User is redirected to `/home`.
 
-### 5.2 Dashboard
+### 5.2 Home
 
-File: `app/dashboard/page.tsx`
+File: `app/home/page.tsx`
 
 - Fetches current user via Supabase server client.  
 - Loads:
@@ -142,7 +142,7 @@ File: `app/dashboard/page.tsx`
   2. **Reflection submitted but circle not unlocked** → “Your reflection is complete. We’ll text you when everyone is done.”  
   3. **Circle unlocked** → shows `ReadingStatus` + **Read Reflections / Revisit** button.
 
-`ReadingStatus` (`app/dashboard/reading-status.tsx`):
+`ReadingStatus` (`app/home/reading-status.tsx`):
 
 - Uses `localStorage` key `reflection_read_${weekId}` to track if the user finished reading for that week.  
 - Shows “Read Reflections” or “Revisit this week’s reflections” accordingly.
@@ -160,7 +160,7 @@ File: `app/reflection/page.tsx`
 - On submit:
   - Inserts into `reflections` (rose/bud/thorn text, `submitted_at`).  
   - Clears draft from `localStorage`.  
-  - Redirects back to `/dashboard` (which now shows waiting/unlocked depending on others).
+  - Redirects back to `/home` (which now shows waiting/unlocked depending on others).
 - **Mobile UX:** Responsive design with mobile-first spacing, larger touch targets, safe area support
 
 ### 5.4 Unlock Logic
@@ -256,7 +256,7 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
 - **Reflection Wizard** (`app/reflection/page.tsx`): Responsive padding, larger textareas, full-width buttons on mobile
 - **Review Reflections** (`app/read/page.tsx`): Improved spacing, larger text, better button layout
 - **AudioRecorder** (`components/audio-recorder.tsx`): Full-width buttons on mobile, better spacing
-- **Dashboard**: Export buttons and navigation optimized for mobile
+- **Home**: Export buttons and navigation optimized for mobile
 
 ---
 
@@ -277,7 +277,7 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
 2. Chunk 2 – Supabase schema  
 3. Chunk 3 – Auth + Invite Flow  
 4. Chunk 4 – Week model + `currentWeek`  
-5. Chunk 5 – Basic dashboard states  
+5. Chunk 5 – Basic home states  
 6. Chunk 6 – Reflection wizard (text-only)  
 7. Chunk 7 – Real unlock logic  
 8. Chunk 8 – Friend reading flow (text-only)  
@@ -323,7 +323,7 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
     - Automatic transcription trigger after reflection submission
     - Reading UI with audio player and "View Transcribed Version" toggle
     - Transcript display with error handling
-    - Export reflection feature (`app/dashboard/export-reflection.tsx`)
+    - Export reflection feature (`app/home/export-reflection.tsx`)
       - Copy to clipboard
       - Download as text (.txt)
       - Download as Markdown (.md)
@@ -338,7 +338,7 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
 **Next chunk (not started yet):**
 
 - **Chunk 14 – Polishing + small QA**
-  - Ensure all flows respect one circle per user, mid-week join behavior, linear reading sequence, all three dashboard states
+  - Ensure all flows respect one circle per user, mid-week join behavior, linear reading sequence, all three home states
   - Add basic loading/error states
   - Confirm RLS isn't blocking normal use
   - Clean up routes, components, and environment variable usage
@@ -354,7 +354,7 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
 - [x] **Chunk 2** – Supabase schema (DB only, no UI yet)
 - [x] **Chunk 3** – Auth + Invite Flow
 - [x] **Chunk 4** – Week model + `currentWeek`
-- [x] **Chunk 5** – Basic dashboard states
+- [x] **Chunk 5** – Basic home states
 - [x] **Chunk 6** – Reflection wizard (text-only)
 - [x] **Chunk 7** – Real unlock logic (no SMS yet)
 - [x] **Chunk 8** – Friend reading flow (text-only)

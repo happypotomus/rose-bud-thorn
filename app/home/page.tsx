@@ -6,7 +6,7 @@ import { ReadingStatus } from './reading-status'
 import { ExportReflection } from './export-reflection'
 import { FlowerLogo } from '@/components/flower-logo'
 
-export default async function DashboardPage() {
+export default async function HomePage() {
   const supabase = await createClient()
 
   const {
@@ -97,16 +97,16 @@ export default async function DashboardPage() {
   // We'll check this on the client side since localStorage is client-only
   const hasReadReflections = false // Will be checked client-side
 
-  // Determine dashboard state
-  let dashboardState: 'no_reflection' | 'waiting' | 'unlocked' | 'read' = 'no_reflection'
+  // Determine home state
+  let homeState: 'no_reflection' | 'waiting' | 'unlocked' | 'read' = 'no_reflection'
   
   if (!reflection) {
-    dashboardState = 'no_reflection'
+    homeState = 'no_reflection'
   } else if (reflection && !isUnlocked) {
-    dashboardState = 'waiting'
+    homeState = 'waiting'
   } else if (isUnlocked) {
     // Check reading status will be done client-side
-    dashboardState = 'unlocked'
+    homeState = 'unlocked'
   }
 
   // Explicitly map reflection data to ensure proper serialization when passing to client component
@@ -128,7 +128,7 @@ export default async function DashboardPage() {
     <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 md:p-24 pt-safe pb-safe">
       <div className="text-center w-full max-w-2xl">
         {/* State 1: No reflection yet - First time user design */}
-        {dashboardState === 'no_reflection' ? (
+        {homeState === 'no_reflection' ? (
           <div className="space-y-5 sm:space-y-6">
             <div className="flex justify-center mb-2 sm:mb-4">
               <FlowerLogo size={72} className="sm:w-20 sm:h-20" />
@@ -155,7 +155,7 @@ export default async function DashboardPage() {
             </h1>
             
             {/* State 2: Reflection submitted but circle not unlocked */}
-            {dashboardState === 'waiting' && reflectionData && (
+            {homeState === 'waiting' && reflectionData && (
               <div className="space-y-4 sm:space-y-6">
                 <p className="text-base sm:text-lg md:text-xl text-gray-600">
                   Your reflection is complete.
@@ -174,7 +174,7 @@ export default async function DashboardPage() {
             )}
 
             {/* State 3: Circle unlocked */}
-            {dashboardState === 'unlocked' && (
+            {homeState === 'unlocked' && (
               <div className="space-y-4 sm:space-y-6">
                 <ReadingStatus weekId={currentWeek.id} isUnlocked={isUnlocked} />
                 {reflectionData && (

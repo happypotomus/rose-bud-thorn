@@ -222,8 +222,8 @@ export default function ReflectionPage() {
         localStorage.removeItem(draftKey)
       }
 
-      // Redirect to dashboard
-      router.push('/dashboard')
+      // Redirect to home
+      router.push('/home')
     } catch (err) {
       console.error('Unexpected error:', err)
       setError('Something went wrong. Please try again.')

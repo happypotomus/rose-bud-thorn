@@ -148,8 +148,8 @@ export default function InviteForm() {
       }
 
       // If user was already in a circle, they'll be redirected
-      // Otherwise, redirect to dashboard
-      router.push('/dashboard')
+      // Otherwise, redirect to home
+      router.push('/home')
     } catch (err) {
       setError('Something went wrong. Please try again.')
       setLoading(false)
