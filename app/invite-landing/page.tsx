@@ -3,6 +3,80 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { FlowerLogo } from '@/components/flower-logo'
+import type { Metadata } from 'next'
+
+// Generate metadata for Open Graph and Twitter Cards
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ token?: string }>
+}): Promise<Metadata> {
+  const params = await searchParams
+  const token = params.token
+
+  // Get base URL
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://rose-bud-thorn.vercel.app')
+  
+  const imageUrl = `${baseUrl}/og-invite-image.png`
+
+  if (!token) {
+    return {
+      title: 'Rose, Bud & Thorn - Invalid Invite Link',
+      description: 'This invite link doesn\'t seem to be active.',
+      openGraph: {
+        title: 'Rose, Bud & Thorn',
+        description: 'A weekly ritual tool for small private circles',
+        images: [imageUrl],
+        url: `${baseUrl}/invite-landing`,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: 'Rose, Bud & Thorn',
+        description: 'A weekly ritual tool for small private circles',
+        images: [imageUrl],
+      },
+    }
+  }
+
+  // Fetch circle data for dynamic metadata
+  const supabase = await createClient()
+  const { data: circle } = await supabase
+    .from('circles')
+    .select('circle_owner')
+    .eq('invite_token', token)
+    .single()
+
+  const ownerName = circle?.circle_owner || 'Someone'
+  const title = `Rose, Bud & Thorn - ${ownerName} invited you to join their Circle`
+  const description = `${ownerName} invited you to join their Circle. Every Sunday at 7pm, reflect on your week with friends.`
+  const url = `${baseUrl}/invite-landing?token=${token}`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: 'Rose, Bud & Thorn',
+      description: `${ownerName} invited you to join their Circle`,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: 'Rose, Bud & Thorn - Join a Circle',
+        },
+      ],
+      url,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: 'Rose, Bud & Thorn',
+      description: `${ownerName} invited you to join their Circle`,
+      images: [imageUrl],
+    },
+  }
+}
 
 async function InviteLandingContent({ token }: { token: string }) {
   const supabase = await createClient()
