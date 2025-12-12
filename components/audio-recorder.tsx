@@ -41,6 +41,23 @@ export function AudioRecorder({
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const progressRef = useRef<HTMLDivElement | null>(null)
 
+  // Sync state with existingAudioUrl and section prop changes
+  useEffect(() => {
+    // Reset state when section changes or existingAudioUrl changes
+    if (existingAudioUrl) {
+      setState('uploaded')
+      setAudioUrl(existingAudioUrl)
+    } else {
+      setState('idle')
+      setAudioUrl(null)
+      setAudioBlob(null)
+      setCurrentTime(0)
+      setDuration(0)
+      setIsPlaying(false)
+      setError(null)
+    }
+  }, [existingAudioUrl, section])
+
   // Audio player setup - only recreate when audioUrl or state changes, not playbackRate
   useEffect(() => {
     if (audioUrl && state === 'uploaded') {
