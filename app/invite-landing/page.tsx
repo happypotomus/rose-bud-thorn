@@ -123,7 +123,7 @@ async function InviteLandingContent({ token }: { token: string }) {
           href={`/invite?token=${token}`}
           className="inline-block w-full bg-rose text-white py-3.5 sm:py-3 px-6 rounded-lg hover:bg-rose-dark active:bg-rose-dark font-medium text-base sm:text-lg transition-colors touch-manipulation min-h-[44px] flex items-center justify-center"
         >
-          Join {ownerName}'s Buds
+          Join {ownerName}'s Circle
         </Link>
 
         {/* Footer disclaimer */}
