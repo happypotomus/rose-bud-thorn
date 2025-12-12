@@ -9,15 +9,19 @@ export type ReflectionData = {
   rose_transcript: string | null
   bud_transcript: string | null
   thorn_transcript: string | null
+  rose_audio_url?: string | null
+  bud_audio_url?: string | null
+  thorn_audio_url?: string | null
   submitted_at: string | null
 }
 
 /**
  * Gets the display content for a section
  * Prefers text over transcript, but uses transcript if text is empty
+ * If neither exists but audio URL exists, returns "Audio response"
  * For export: we want the cleaned transcript (which is already cleaned by GPT)
  */
-function getSectionContent(text: string | null, transcript: string | null): string {
+function getSectionContent(text: string | null, transcript: string | null, audioUrl?: string | null): string {
   // If text exists and is not empty, use it (user typed it)
   if (text && text.trim().length > 0) {
     return text.trim()
@@ -25,6 +29,10 @@ function getSectionContent(text: string | null, transcript: string | null): stri
   // Otherwise, use the cleaned transcript (GPT has already removed uhs/ums)
   if (transcript && transcript.trim().length > 0) {
     return transcript.trim()
+  }
+  // If audio exists but no text/transcript, indicate audio response
+  if (audioUrl && audioUrl.trim().length > 0) {
+    return 'Audio response'
   }
   return ''
 }
@@ -37,9 +45,9 @@ export function formatReflectionAsText(
   weekStartDate?: Date,
   weekEndDate?: Date
 ): string {
-  const rose = getSectionContent(reflection.rose_text, reflection.rose_transcript)
-  const bud = getSectionContent(reflection.bud_text, reflection.bud_transcript)
-  const thorn = getSectionContent(reflection.thorn_text, reflection.thorn_transcript)
+  const rose = getSectionContent(reflection.rose_text, reflection.rose_transcript, reflection.rose_audio_url)
+  const bud = getSectionContent(reflection.bud_text, reflection.bud_transcript, reflection.bud_audio_url)
+  const thorn = getSectionContent(reflection.thorn_text, reflection.thorn_transcript, reflection.thorn_audio_url)
 
   let output = ''
 
@@ -78,9 +86,9 @@ export function formatReflectionAsMarkdown(
   weekStartDate?: Date,
   weekEndDate?: Date
 ): string {
-  const rose = getSectionContent(reflection.rose_text, reflection.rose_transcript)
-  const bud = getSectionContent(reflection.bud_text, reflection.bud_transcript)
-  const thorn = getSectionContent(reflection.thorn_text, reflection.thorn_transcript)
+  const rose = getSectionContent(reflection.rose_text, reflection.rose_transcript, reflection.rose_audio_url)
+  const bud = getSectionContent(reflection.bud_text, reflection.bud_transcript, reflection.bud_audio_url)
+  const thorn = getSectionContent(reflection.thorn_text, reflection.thorn_transcript, reflection.thorn_audio_url)
 
   let output = ''
 
@@ -149,4 +157,3 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     }
   }
 }
-

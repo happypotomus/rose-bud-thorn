@@ -80,7 +80,10 @@ export default async function DashboardPage() {
       thorn_text,
       rose_transcript,
       bud_transcript,
-      thorn_transcript
+      thorn_transcript,
+      rose_audio_url,
+      bud_audio_url,
+      thorn_audio_url
     `)
     .eq('user_id', user.id)
     .eq('circle_id', circleId)
@@ -115,6 +118,9 @@ export default async function DashboardPage() {
     rose_transcript: reflection.rose_transcript && reflection.rose_transcript.trim().length > 0 ? reflection.rose_transcript.trim() : null,
     bud_transcript: reflection.bud_transcript && reflection.bud_transcript.trim().length > 0 ? reflection.bud_transcript.trim() : null,
     thorn_transcript: reflection.thorn_transcript && reflection.thorn_transcript.trim().length > 0 ? reflection.thorn_transcript.trim() : null,
+    rose_audio_url: reflection.rose_audio_url && reflection.rose_audio_url.trim().length > 0 ? reflection.rose_audio_url.trim() : null,
+    bud_audio_url: reflection.bud_audio_url && reflection.bud_audio_url.trim().length > 0 ? reflection.bud_audio_url.trim() : null,
+    thorn_audio_url: reflection.thorn_audio_url && reflection.thorn_audio_url.trim().length > 0 ? reflection.thorn_audio_url.trim() : null,
     submitted_at: reflection.submitted_at ?? null,
   } : null
 
@@ -189,4 +195,3 @@ export default async function DashboardPage() {
     </main>
   )
 }
-
