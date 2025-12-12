@@ -43,7 +43,7 @@ async function InviteLandingContent({ token }: { token: string }) {
 
         {/* Invitation text */}
         <p className="text-gray-600 text-sm sm:text-base md:text-lg px-2">
-          {ownerName} invited you to join their Buds
+          {ownerName} invited you to join their Circle
         </p>
 
         {/* Content box */}
