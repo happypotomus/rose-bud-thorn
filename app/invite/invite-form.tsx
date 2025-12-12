@@ -11,11 +11,15 @@ export default function InviteForm() {
   const token = searchParams.get('token')
   
   const [firstName, setFirstName] = useState('')
-  const [phone, setPhone] = useState('')
+  const [countryCode, setCountryCode] = useState('+1') // Default to Canada
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [otpSent, setOtpSent] = useState(false)
   const [otp, setOtp] = useState('')
+  
+  // Combine country code and phone number into E.164 format
+  const fullPhoneNumber = `${countryCode}${phoneNumber.replace(/\D/g, '')}`
 
   const supabase = createClient()
 
@@ -79,9 +83,9 @@ export default function InviteForm() {
         return
       }
 
-      // Send OTP via Supabase
+      // Send OTP via Supabase (phone is in E.164 format: +country_code + number)
       const { error: otpError } = await supabase.auth.signInWithOtp({
-        phone: phone,
+        phone: fullPhoneNumber,
         options: {
           data: {
             first_name: firstName,
@@ -110,9 +114,9 @@ export default function InviteForm() {
     setError(null)
 
     try {
-      // Verify OTP
+      // Verify OTP (phone is in E.164 format: +country_code + number)
       const { data: authData, error: verifyError } = await supabase.auth.verifyOtp({
-        phone: phone,
+        phone: fullPhoneNumber,
         token: otp,
         type: 'sms',
       })
@@ -130,7 +134,7 @@ export default function InviteForm() {
         body: JSON.stringify({
           userId: authData.user.id,
           firstName,
-          phone,
+          phone: fullPhoneNumber,
           inviteToken: token,
         }),
       })
@@ -162,7 +166,7 @@ export default function InviteForm() {
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3 text-black px-2">Verify Your Phone</h1>
             <p className="text-gray-600 text-sm sm:text-base md:text-lg px-2">
-              We sent a code to {phone}. Please enter it below.
+              We sent a code to {fullPhoneNumber}. Please enter it below.
             </p>
           </div>
 
@@ -239,17 +243,59 @@ export default function InviteForm() {
             <label htmlFor="phone" className="block text-sm font-medium mb-2 text-black">
               Phone Number
             </label>
-            <input
-              id="phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="(555) 123-4567"
-              required
-              autoComplete="tel"
-              inputMode="tel"
-              className="w-full px-4 py-3.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose focus:border-transparent text-base touch-manipulation min-h-[44px]"
-            />
+            <div className="flex gap-2">
+              {/* Country Code Dropdown */}
+              <select
+                id="countryCode"
+                value={countryCode}
+                onChange={(e) => setCountryCode(e.target.value)}
+                className="px-3 sm:px-4 py-3.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose focus:border-transparent text-base touch-manipulation min-h-[44px] bg-white"
+                style={{ width: 'auto', minWidth: '100px' }}
+              >
+                <option value="+1">🇨🇦 +1</option>
+                <option value="+1">🇺🇸 +1</option>
+                <option value="+44">🇬🇧 +44</option>
+                <option value="+61">🇦🇺 +61</option>
+                <option value="+33">🇫🇷 +33</option>
+                <option value="+49">🇩🇪 +49</option>
+                <option value="+81">🇯🇵 +81</option>
+                <option value="+86">🇨🇳 +86</option>
+                <option value="+91">🇮🇳 +91</option>
+                <option value="+52">🇲🇽 +52</option>
+                <option value="+55">🇧🇷 +55</option>
+                <option value="+34">🇪🇸 +34</option>
+                <option value="+39">🇮🇹 +39</option>
+                <option value="+31">🇳🇱 +31</option>
+                <option value="+46">🇸🇪 +46</option>
+                <option value="+47">🇳🇴 +47</option>
+                <option value="+41">🇨🇭 +41</option>
+                <option value="+32">🇧🇪 +32</option>
+                <option value="+353">🇮🇪 +353</option>
+                <option value="+64">🇳🇿 +64</option>
+                <option value="+27">🇿🇦 +27</option>
+                <option value="+971">🇦🇪 +971</option>
+                <option value="+65">🇸🇬 +65</option>
+                <option value="+82">🇰🇷 +82</option>
+                <option value="+852">🇭🇰 +852</option>
+                <option value="+886">🇹🇼 +886</option>
+              </select>
+              
+              {/* Phone Number Input */}
+              <input
+                id="phone"
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                placeholder="604 618 9413"
+                required
+                autoComplete="tel-national"
+                inputMode="numeric"
+                className="flex-1 px-4 py-3.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose focus:border-transparent text-base touch-manipulation min-h-[44px]"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Enter your phone number without the country code
+            </p>
           </div>
 
           {error && (
