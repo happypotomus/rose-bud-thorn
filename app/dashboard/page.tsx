@@ -106,13 +106,14 @@ export default async function DashboardPage() {
   }
 
   // Explicitly map reflection data to ensure proper serialization when passing to client component
+  // Convert empty strings to null for consistent handling (empty strings come from audio-only submissions)
   const reflectionData = reflection ? {
-    rose_text: reflection.rose_text ?? null,
-    bud_text: reflection.bud_text ?? null,
-    thorn_text: reflection.thorn_text ?? null,
-    rose_transcript: reflection.rose_transcript ?? null,
-    bud_transcript: reflection.bud_transcript ?? null,
-    thorn_transcript: reflection.thorn_transcript ?? null,
+    rose_text: reflection.rose_text && reflection.rose_text.trim().length > 0 ? reflection.rose_text.trim() : null,
+    bud_text: reflection.bud_text && reflection.bud_text.trim().length > 0 ? reflection.bud_text.trim() : null,
+    thorn_text: reflection.thorn_text && reflection.thorn_text.trim().length > 0 ? reflection.thorn_text.trim() : null,
+    rose_transcript: reflection.rose_transcript && reflection.rose_transcript.trim().length > 0 ? reflection.rose_transcript.trim() : null,
+    bud_transcript: reflection.bud_transcript && reflection.bud_transcript.trim().length > 0 ? reflection.bud_transcript.trim() : null,
+    thorn_transcript: reflection.thorn_transcript && reflection.thorn_transcript.trim().length > 0 ? reflection.thorn_transcript.trim() : null,
     submitted_at: reflection.submitted_at ?? null,
   } : null
 
