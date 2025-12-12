@@ -39,10 +39,10 @@ export default async function DashboardPage() {
   
   if (!currentWeek) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-24">
-        <div className="text-center max-w-md">
-          <div className="bg-yellow-100 p-4 rounded-md mb-4">
-            <p className="text-sm text-yellow-700">
+      <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 md:p-24 pt-safe pb-safe">
+        <div className="text-center w-full max-w-2xl">
+          <div className="bg-yellow-100 p-4 sm:p-5 rounded-lg mb-4">
+            <p className="text-sm sm:text-base text-yellow-700">
               Unable to load current week. Please refresh the page.
             </p>
           </div>
@@ -53,9 +53,9 @@ export default async function DashboardPage() {
 
   if (!membership) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-24">
-        <div className="text-center max-w-md">
-          <p className="text-lg text-gray-600">
+      <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 md:p-24 pt-safe pb-safe">
+        <div className="text-center w-full max-w-2xl">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600">
             You're not in a circle yet.
           </p>
         </div>
@@ -118,21 +118,21 @@ export default async function DashboardPage() {
   } : null
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="text-center max-w-md w-full">
-        <h1 className="text-4xl font-bold mb-4">
+    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 md:p-24 pt-safe pb-safe">
+      <div className="text-center w-full max-w-2xl">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
           Welcome{profile?.first_name ? `, ${profile.first_name}` : ''}!
         </h1>
         
         {/* State 1: No reflection yet */}
         {dashboardState === 'no_reflection' && (
-          <div className="space-y-4">
-            <p className="text-lg text-gray-600">
+          <div className="space-y-4 sm:space-y-6">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600">
               Your reflection isn't done yet.
             </p>
             <a
               href="/reflection"
-              className="inline-block bg-rose text-white px-6 py-3 rounded-md hover:bg-rose-dark font-medium"
+              className="inline-block bg-rose text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg hover:bg-rose-dark active:bg-rose-dark font-medium text-base sm:text-lg transition-colors touch-manipulation min-h-[44px] flex items-center justify-center"
             >
               Start Reflection
             </a>
@@ -141,14 +141,14 @@ export default async function DashboardPage() {
 
         {/* State 2: Reflection submitted but circle not unlocked */}
         {dashboardState === 'waiting' && reflectionData && (
-          <div className="space-y-4">
-            <p className="text-lg text-gray-600">
+          <div className="space-y-4 sm:space-y-6">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600">
               Your reflection is complete.
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm sm:text-base text-gray-500">
               We'll text you when everyone is done.
             </p>
-            <div className="pt-2">
+            <div className="pt-2 sm:pt-4">
               <ExportReflection 
                 reflection={reflectionData}
                 weekStartDate={new Date(currentWeek.start_at)}
@@ -160,10 +160,10 @@ export default async function DashboardPage() {
 
         {/* State 3: Circle unlocked */}
         {dashboardState === 'unlocked' && (
-          <div className="space-y-4">
+          <div className="space-y-4 sm:space-y-6">
             <ReadingStatus weekId={currentWeek.id} isUnlocked={isUnlocked} />
             {reflectionData && (
-              <div className="pt-2">
+              <div className="pt-2 sm:pt-4">
                 <ExportReflection 
                   reflection={reflectionData}
                   weekStartDate={new Date(currentWeek.start_at)}
@@ -175,15 +175,15 @@ export default async function DashboardPage() {
         )}
 
         {/* Debug info (can remove later) */}
-        <div className="mt-8 space-y-2">
-          <div className="bg-gray-100 p-3 rounded-md text-left">
-            <p className="text-xs text-gray-600 mb-1">
+        <div className="mt-6 sm:mt-8 space-y-2">
+          <div className="bg-gray-100 p-3 sm:p-4 rounded-lg text-left">
+            <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
               <strong>Circle:</strong> {circleName}
             </p>
-            <p className="text-xs text-gray-600 mb-1">
+            <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
               <strong>Week:</strong> {new Date(currentWeek.start_at).toLocaleDateString()} - {new Date(currentWeek.end_at).toLocaleDateString()}
             </p>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs sm:text-sm text-gray-600">
               <strong>State:</strong> {dashboardState} | <strong>Unlocked:</strong> {isUnlocked ? 'Yes' : 'No'}
             </p>
           </div>

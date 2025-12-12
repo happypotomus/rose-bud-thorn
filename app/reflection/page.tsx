@@ -246,7 +246,7 @@ export default function ReflectionPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:p-12 md:p-24 pb-safe mb-safe">
-      <div className="w-full max-w-2xl">
+      <div className="w-full max-w-3xl">
         {/* Progress indicator */}
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center justify-between mb-2">

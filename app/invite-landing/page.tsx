@@ -17,7 +17,7 @@ async function InviteLandingContent({ token }: { token: string }) {
   if (error || !circle) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 bg-white pt-safe pb-safe">
-        <div className="text-center max-w-md px-4">
+        <div className="text-center w-full max-w-2xl px-4">
           <h1 className="text-2xl sm:text-3xl font-bold mb-4">Invalid Invite Link</h1>
           <p className="text-gray-600 text-sm sm:text-base">
             This invite link doesn't seem to be active. It might be old or typed incorrectly.
@@ -32,7 +32,7 @@ async function InviteLandingContent({ token }: { token: string }) {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 bg-white pt-safe pb-safe">
-      <div className="w-full max-w-md space-y-5 sm:space-y-6 text-center">
+      <div className="w-full max-w-lg sm:max-w-xl md:max-w-2xl space-y-5 sm:space-y-6 text-center">
         {/* Logo */}
         <div className="flex justify-center mb-2 sm:mb-4">
           <FlowerLogo size={72} className="sm:w-20 sm:h-20" />
@@ -166,7 +166,7 @@ async function InviteLandingWrapper({
   if (!token) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 bg-white pt-safe pb-safe">
-        <div className="text-center max-w-md px-4">
+        <div className="text-center w-full max-w-2xl px-4">
           <h1 className="text-2xl sm:text-3xl font-bold mb-4">Invalid Invite Link</h1>
           <p className="text-gray-600 text-sm sm:text-base">
             This invite link doesn't seem to be active. It might be old or typed incorrectly.

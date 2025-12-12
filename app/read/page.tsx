@@ -210,7 +210,7 @@ export default function ReadPage() {
   if (error) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:p-12 md:p-24 pb-safe">
-        <div className="text-center max-w-md">
+        <div className="text-center w-full max-w-2xl">
           <p className="text-base sm:text-lg text-red-600 mb-4 sm:mb-6">{error}</p>
           <Link
             href="/dashboard"
@@ -227,7 +227,7 @@ export default function ReadPage() {
   if (friends.length === 0 || currentIndex >= friends.length) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:p-12 md:p-24 pb-safe mb-safe">
-        <div className="text-center max-w-md space-y-4 sm:space-y-6">
+        <div className="text-center w-full max-w-2xl space-y-4 sm:space-y-6">
           <div className="text-5xl sm:text-6xl mb-4">🌸</div>
           <h1 className="text-2xl sm:text-3xl font-bold">
             Your circle is in full bloom this week.
@@ -251,7 +251,7 @@ export default function ReadPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:p-12 md:p-24 pb-safe mb-safe">
-      <div className="w-full max-w-2xl">
+      <div className="w-full max-w-3xl">
         {/* Progress indicator */}
         <div className="mb-4 sm:mb-6 text-center">
           <p className="text-sm sm:text-base text-gray-600">

@@ -41,7 +41,7 @@ export default function TestSMSPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-lg sm:max-w-xl md:max-w-2xl space-y-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Test SMS Sending</h1>
           <p className="text-gray-600 text-sm">
