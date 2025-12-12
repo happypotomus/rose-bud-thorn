@@ -199,9 +199,9 @@ export default function ReadPage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-24">
+      <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:p-12 md:p-24 pb-safe">
         <div className="text-center">
-          <p className="text-lg text-gray-600">Loading reflections...</p>
+          <p className="text-base sm:text-lg text-gray-600">Loading reflections...</p>
         </div>
       </main>
     )
@@ -209,12 +209,12 @@ export default function ReadPage() {
 
   if (error) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-24">
+      <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:p-12 md:p-24 pb-safe">
         <div className="text-center max-w-md">
-          <p className="text-lg text-red-600 mb-4">{error}</p>
+          <p className="text-base sm:text-lg text-red-600 mb-4 sm:mb-6">{error}</p>
           <Link
             href="/dashboard"
-            className="text-blue-600 hover:underline"
+            className="text-base sm:text-lg text-blue-600 hover:underline"
           >
             Return to dashboard
           </Link>
@@ -226,18 +226,18 @@ export default function ReadPage() {
   // If no friends or all friends viewed, show bloom screen
   if (friends.length === 0 || currentIndex >= friends.length) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-24">
-        <div className="text-center max-w-md space-y-6">
-          <div className="text-6xl mb-4">🌸</div>
-          <h1 className="text-3xl font-bold">
+      <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:p-12 md:p-24 pb-safe mb-safe">
+        <div className="text-center max-w-md space-y-4 sm:space-y-6">
+          <div className="text-5xl sm:text-6xl mb-4">🌸</div>
+          <h1 className="text-2xl sm:text-3xl font-bold">
             Your circle is in full bloom this week.
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-base sm:text-lg text-gray-600">
             You're all caught up.
           </p>
           <Link
             href="/dashboard"
-            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 font-medium"
+            className="inline-block w-full sm:w-auto bg-blue-600 text-white px-6 sm:px-8 py-3 text-base sm:text-lg rounded-md hover:bg-blue-700 font-medium"
           >
             Return to Dashboard
           </Link>
@@ -250,45 +250,45 @@ export default function ReadPage() {
   const isLastFriend = currentIndex === friends.length - 1
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:p-12 md:p-24 pb-safe mb-safe">
       <div className="w-full max-w-2xl">
         {/* Progress indicator */}
-        <div className="mb-6 text-center">
-          <p className="text-sm text-gray-600">
+        <div className="mb-4 sm:mb-6 text-center">
+          <p className="text-sm sm:text-base text-gray-600">
             {currentIndex + 1} of {friends.length}
           </p>
         </div>
 
         {/* Friend's reflection */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
-          <h2 className="text-2xl font-bold mb-6">
+        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8 mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6">
             {currentFriend.first_name}'s Reflection
           </h2>
 
-          <div className="space-y-6">
+          <div className="space-y-6 sm:space-y-8">
             {/* Rose Section */}
             <div>
-              <h3 className="font-semibold text-lg mb-2 text-rose-600">🌹 Rose</h3>
-              <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded mb-2">
+              <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4 text-rose-600">🌹 Rose</h3>
+              <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
                 {currentFriend.rose_text || '(No response)'}
               </p>
               {currentFriend.rose_audio_url && (
-                <div className="mt-3 space-y-2">
+                <div className="mt-4 sm:mt-3 space-y-3 sm:space-y-2">
                   <audio src={currentFriend.rose_audio_url} controls className="w-full" />
                   <button
                     onClick={() => toggleTranscript('rose')}
-                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                    className="text-base sm:text-sm text-blue-600 hover:text-blue-800 underline font-medium py-2"
                   >
                     {showTranscripts.rose ? 'Hide Transcribed Version' : 'View Transcribed Version'}
                   </button>
                   {showTranscripts.rose && (
-                    <div className="mt-2 p-3 bg-blue-50 rounded border border-blue-200">
+                    <div className="mt-2 p-4 sm:p-3 bg-blue-50 rounded border-2 border-blue-200">
                       {currentFriend.rose_transcript ? (
-                        <p className="text-gray-700 whitespace-pre-wrap text-sm">
+                        <p className="text-gray-700 whitespace-pre-wrap text-sm sm:text-base">
                           {currentFriend.rose_transcript}
                         </p>
                       ) : (
-                        <p className="text-gray-600 italic text-sm">
+                        <p className="text-gray-600 italic text-sm sm:text-base">
                           We couldn't generate a transcript for this recording. Please listen to the audio instead.
                         </p>
                       )}
@@ -300,27 +300,27 @@ export default function ReadPage() {
 
             {/* Bud Section */}
             <div>
-              <h3 className="font-semibold text-lg mb-2 text-green-600">🌱 Bud</h3>
-              <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded mb-2">
+              <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4 text-green-600">🌱 Bud</h3>
+              <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
                 {currentFriend.bud_text || '(No response)'}
               </p>
               {currentFriend.bud_audio_url && (
-                <div className="mt-3 space-y-2">
+                <div className="mt-4 sm:mt-3 space-y-3 sm:space-y-2">
                   <audio src={currentFriend.bud_audio_url} controls className="w-full" />
                   <button
                     onClick={() => toggleTranscript('bud')}
-                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                    className="text-base sm:text-sm text-blue-600 hover:text-blue-800 underline font-medium py-2"
                   >
                     {showTranscripts.bud ? 'Hide Transcribed Version' : 'View Transcribed Version'}
                   </button>
                   {showTranscripts.bud && (
-                    <div className="mt-2 p-3 bg-blue-50 rounded border border-blue-200">
+                    <div className="mt-2 p-4 sm:p-3 bg-blue-50 rounded border-2 border-blue-200">
                       {currentFriend.bud_transcript ? (
-                        <p className="text-gray-700 whitespace-pre-wrap text-sm">
+                        <p className="text-gray-700 whitespace-pre-wrap text-sm sm:text-base">
                           {currentFriend.bud_transcript}
                         </p>
                       ) : (
-                        <p className="text-gray-600 italic text-sm">
+                        <p className="text-gray-600 italic text-sm sm:text-base">
                           We couldn't generate a transcript for this recording. Please listen to the audio instead.
                         </p>
                       )}
@@ -332,27 +332,27 @@ export default function ReadPage() {
 
             {/* Thorn Section */}
             <div>
-              <h3 className="font-semibold text-lg mb-2 text-orange-600">🌵 Thorn</h3>
-              <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded mb-2">
+              <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4 text-orange-600">🌵 Thorn</h3>
+              <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
                 {currentFriend.thorn_text || '(No response)'}
               </p>
               {currentFriend.thorn_audio_url && (
-                <div className="mt-3 space-y-2">
+                <div className="mt-4 sm:mt-3 space-y-3 sm:space-y-2">
                   <audio src={currentFriend.thorn_audio_url} controls className="w-full" />
                   <button
                     onClick={() => toggleTranscript('thorn')}
-                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                    className="text-base sm:text-sm text-blue-600 hover:text-blue-800 underline font-medium py-2"
                   >
                     {showTranscripts.thorn ? 'Hide Transcribed Version' : 'View Transcribed Version'}
                   </button>
                   {showTranscripts.thorn && (
-                    <div className="mt-2 p-3 bg-blue-50 rounded border border-blue-200">
+                    <div className="mt-2 p-4 sm:p-3 bg-blue-50 rounded border-2 border-blue-200">
                       {currentFriend.thorn_transcript ? (
-                        <p className="text-gray-700 whitespace-pre-wrap text-sm">
+                        <p className="text-gray-700 whitespace-pre-wrap text-sm sm:text-base">
                           {currentFriend.thorn_transcript}
                         </p>
                       ) : (
-                        <p className="text-gray-600 italic text-sm">
+                        <p className="text-gray-600 italic text-sm sm:text-base">
                           We couldn't generate a transcript for this recording. Please listen to the audio instead.
                         </p>
                       )}
@@ -365,18 +365,18 @@ export default function ReadPage() {
         </div>
 
         {/* Navigation */}
-        <div className="flex justify-center">
+        <div className="flex justify-center pb-4 sm:pb-0">
           {isLastFriend ? (
             <button
               onClick={handleContinue}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 text-base sm:text-lg bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
             >
               Finish Reading
             </button>
           ) : (
             <button
               onClick={handleContinue}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 text-base sm:text-lg bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
             >
               See {friends[currentIndex + 1]?.first_name}'s entry
             </button>
