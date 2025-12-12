@@ -324,11 +324,17 @@ export default function ReflectionPage() {
         {/* Rose, Bud, Thorn steps - new clean layout */}
         {(currentStep === 'rose' || currentStep === 'bud' || currentStep === 'thorn') && (
           <div className="text-center space-y-6 sm:space-y-8">
-            {/* Flower icon */}
+            {/* Step icon - different for each step */}
             <div className="flex justify-center">
               <div className="relative">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-rose-200 flex items-center justify-center bg-white">
-                  <FlowerLogo size={48} className="sm:w-14 sm:h-14" />
+                  {currentStep === 'rose' ? (
+                    <FlowerLogo size={48} className="sm:w-14 sm:h-14" />
+                  ) : currentStep === 'bud' ? (
+                    <span className="text-4xl sm:text-5xl">🌱</span>
+                  ) : (
+                    <span className="text-4xl sm:text-5xl">🌵</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -351,8 +357,23 @@ export default function ReflectionPage() {
               />
             </div>
 
-            {/* Next button */}
-            <div className="flex justify-center">
+            {/* Navigation buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+              {/* Back button - show for bud and thorn */}
+              {currentStep !== 'rose' && (
+                <button
+                  onClick={handleBack}
+                  disabled={loading}
+                  className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3 text-base sm:text-lg border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors touch-manipulation min-h-[44px] flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back
+                </button>
+              )}
+              
+              {/* Next button */}
               <button
                 onClick={handleNext}
                 disabled={!canProceed(currentStep) || loading}
