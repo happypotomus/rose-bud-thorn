@@ -49,13 +49,16 @@ export function AudioRecorder({
       audio.playbackRate = playbackRate
 
       const updateTime = () => {
-        if (audio && !isNaN(audio.currentTime) && !isNaN(audio.duration)) {
-          setCurrentTime(audio.currentTime)
+        // CRITICAL FIX: Use audioRef.current instead of closure variable
+        const currentAudio = audioRef.current
+        if (currentAudio && !isNaN(currentAudio.currentTime)) {
+          setCurrentTime(currentAudio.currentTime)
         }
       }
       const updateDuration = () => {
-        if (audio && !isNaN(audio.duration)) {
-          setDuration(audio.duration)
+        const currentAudio = audioRef.current
+        if (currentAudio && !isNaN(currentAudio.duration) && currentAudio.duration > 0) {
+          setDuration(currentAudio.duration)
         }
       }
       const handleEnded = () => {
