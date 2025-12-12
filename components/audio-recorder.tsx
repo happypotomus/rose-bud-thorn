@@ -41,7 +41,7 @@ export function AudioRecorder({
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const progressRef = useRef<HTMLDivElement | null>(null)
 
-  // Audio player setup
+  // Audio player setup - only recreate when audioUrl or state changes, not playbackRate
   useEffect(() => {
     if (audioUrl && state === 'uploaded') {
       const audio = new Audio(audioUrl)
@@ -49,7 +49,7 @@ export function AudioRecorder({
       audio.playbackRate = playbackRate
 
       const updateTime = () => {
-        if (audio && !isNaN(audio.currentTime)) {
+        if (audio && !isNaN(audio.currentTime) && !isNaN(audio.duration)) {
           setCurrentTime(audio.currentTime)
         }
       }
@@ -66,7 +66,7 @@ export function AudioRecorder({
       const handlePause = () => setIsPlaying(false)
 
       // Update time more frequently for smoother progress bar
-      const timeInterval = setInterval(updateTime, 100)
+      const timeInterval = setInterval(updateTime, 50)
       
       audio.addEventListener('loadedmetadata', updateDuration)
       audio.addEventListener('ended', handleEnded)
@@ -88,7 +88,21 @@ export function AudioRecorder({
         audioRef.current = null
       }
     }
-  }, [audioUrl, state, playbackRate])
+  }, [audioUrl, state])
+
+  // Update playback rate on existing audio element without recreating it
+  useEffect(() => {
+    if (audioRef.current && state === 'uploaded') {
+      const wasPlaying = !audioRef.current.paused
+      audioRef.current.playbackRate = playbackRate
+      // If audio was playing, ensure it continues playing after rate change
+      if (wasPlaying && audioRef.current.paused) {
+        audioRef.current.play().catch(err => {
+          console.error('Error playing audio after speed change:', err)
+        })
+      }
+    }
+  }, [playbackRate, state])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -135,17 +149,20 @@ export function AudioRecorder({
   const handlePlaybackSpeedChange = () => {
     const newRate = playbackRate === 1 ? 1.5 : 1
     setPlaybackRate(newRate)
-    if (audioRef.current) {
-      audioRef.current.playbackRate = newRate
-    }
+    // The useEffect will handle updating the playback rate and maintaining playback state
   }
 
-  // Update playback rate when it changes
-  useEffect(() => {
+  const handleRestart = () => {
     if (audioRef.current) {
-      audioRef.current.playbackRate = playbackRate
+      audioRef.current.currentTime = 0
+      setCurrentTime(0)
+      if (!isPlaying) {
+        audioRef.current.play().catch(err => {
+          console.error('Error playing audio:', err)
+        })
+      }
     }
-  }, [playbackRate])
+  }
 
   const startRecording = async () => {
     try {
@@ -292,7 +309,7 @@ export function AudioRecorder({
     )
   }
 
-  // Recording state - animated red button with concentric circles
+  // Recording state - animated red button with concentric circles, keep microphone icon
   if (state === 'recording') {
     return (
       <div className="relative flex items-center justify-center">
@@ -303,7 +320,7 @@ export function AudioRecorder({
           <div className="absolute w-[72px] h-[72px] sm:w-[88px] sm:h-[88px] rounded-full bg-red-600/10 recording-circle recording-circle-3" />
         </div>
         
-        {/* Red recording button */}
+        {/* Red recording button with microphone icon */}
         <button
           onClick={stopRecording}
           className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-600 flex items-center justify-center hover:bg-red-700 transition-colors touch-manipulation z-10"
@@ -311,13 +328,15 @@ export function AudioRecorder({
         >
           <svg
             className="w-6 h-6 sm:w-8 sm:h-8 text-white"
-            fill="currentColor"
-            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
             <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v6a1 1 0 11-2 0V7zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V7a1 1 0 00-1-1z"
-              clipRule="evenodd"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
             />
           </svg>
         </button>
@@ -361,10 +380,10 @@ export function AudioRecorder({
     return (
       <div className="w-full max-w-md">
         <div className="p-3 sm:p-4 border border-gray-300 rounded-lg bg-white space-y-3">
-          {/* Top row: Play/Pause button + "Recorded" text + Playback speed + Delete icon */}
+          {/* Top row: Play/Pause button + Restart + "Recorded" text + Playback speed + Delete icon */}
           <div className="flex items-center justify-between">
-            {/* Left side: Play/Pause button + "Recorded" text */}
-            <div className="flex items-center gap-3">
+            {/* Left side: Play/Pause button + Restart + "Recorded" text */}
+            <div className="flex items-center gap-2">
               <button
                 onClick={togglePlayPause}
                 className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
@@ -392,7 +411,26 @@ export function AudioRecorder({
                   </svg>
                 )}
               </button>
-              <span className="text-sm sm:text-base text-gray-600">Recorded</span>
+              <button
+                onClick={handleRestart}
+                className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Restart from beginning"
+              >
+                <svg
+                  className="w-5 h-5 text-gray-700"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </button>
+              <span className="text-sm sm:text-base text-gray-600 ml-1">Recorded</span>
             </div>
             
             {/* Right side: Playback speed + Delete icon */}
