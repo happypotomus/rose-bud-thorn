@@ -34,6 +34,11 @@ Deno.serve(async (req) => {
     const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID')!
     const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN')!
     const twilioPhoneNumber = Deno.env.get('TWILIO_PHONE_NUMBER')!
+    
+    // Get app base URL for links in SMS
+    const appBaseUrl = Deno.env.get('APP_URL') || 
+      Deno.env.get('NEXT_PUBLIC_APP_URL') ||
+      'https://rose-bud-thorn.vercel.app'
 
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error('Missing Supabase environment variables. SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set as Edge Function secrets.')
@@ -131,9 +136,10 @@ Deno.serve(async (req) => {
       // Send SMS to each member
       for (const profile of profiles) {
         try {
-          // Personalize message
+          // Personalize message with link to reflection page
           const firstName = profile.first_name || 'there'
-          const message = `Hey ${firstName}, it's time for your weekly Rose–Bud–Thorn reflection.`
+          const reflectionUrl = `${appBaseUrl}/reflection`
+          const message = `Hey ${firstName}, it's time for your weekly Rose–Bud–Thorn reflection. ${reflectionUrl}`
 
           // Send SMS via Twilio REST API
           const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`
