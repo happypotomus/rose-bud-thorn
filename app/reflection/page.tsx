@@ -354,26 +354,28 @@ export default function ReflectionPage() {
             </div>
 
             {/* Navigation buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+            <div className="flex flex-row gap-3 sm:gap-4">
               {/* Back button - show for bud and thorn */}
-              {currentStep !== 'rose' && (
+              {currentStep !== 'rose' ? (
                 <button
                   onClick={handleBack}
                   disabled={loading}
-                  className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3 text-base sm:text-lg border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors touch-manipulation min-h-[44px] flex items-center justify-center gap-2"
+                  className="flex-1 px-6 sm:px-8 py-3 sm:py-3 text-base sm:text-lg border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors touch-manipulation min-h-[44px] flex items-center justify-center gap-2"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                   Back
                 </button>
+              ) : (
+                <div className="flex-1" />
               )}
               
               {/* Next button */}
               <button
                 onClick={handleNext}
                 disabled={!canProceed(currentStep) || loading}
-                className="w-full sm:w-auto bg-rose text-white px-8 sm:px-10 py-3 sm:py-3.5 rounded-lg hover:bg-rose-dark active:bg-rose-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base sm:text-lg transition-colors touch-manipulation min-h-[44px] flex items-center justify-center gap-2"
+                className="flex-1 bg-rose text-white px-8 sm:px-10 py-3 sm:py-3.5 rounded-lg hover:bg-rose-dark active:bg-rose-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base sm:text-lg transition-colors touch-manipulation min-h-[44px] flex items-center justify-center gap-2"
               >
                 Next
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
