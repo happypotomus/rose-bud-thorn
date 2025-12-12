@@ -161,6 +161,7 @@ File: `app/reflection/page.tsx`
   - Inserts into `reflections` (rose/bud/thorn text, `submitted_at`).  
   - Clears draft from `localStorage`.  
   - Redirects back to `/dashboard` (which now shows waiting/unlocked depending on others).
+- **Mobile UX:** Responsive design with mobile-first spacing, larger touch targets, safe area support
 
 ### 5.4 Unlock Logic
 
@@ -194,12 +195,10 @@ File: `app/read/page.tsx` (client component)
   - Shows bloom screen: “Your circle is in full bloom this week. You’re all caught up.”  
   - Returns to dashboard via button.
 
-**Important fix:**  
-Because RLS originally blocked reading other profiles, we:
-
-- Added policy `"Users can view profiles in same circle"` on `profiles`.  
-- Stopped relying on a direct `profiles` join in the reflections query; instead we:
-  - Fetch reflections, extract user_ids, then fetch `profiles` separately, merging them in the app.
+**Important fixes:**  
+- RLS fix: Added policy `"Users can view profiles in same circle"` on `profiles`. Stopped relying on a direct `profiles` join in the reflections query; instead we fetch reflections, extract user_ids, then fetch `profiles` separately, merging them in the app.
+- Auth redirect: Unauthenticated users clicking SMS link are redirected to `/invite` to log in with phone number + OTP.
+- **Mobile UX:** Responsive design with mobile-first spacing, larger touch targets, safe area support, improved typography scaling
 
 ---
 
@@ -242,7 +241,26 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
 
 ---
 
-## 7. Deployment Notes
+## 7. Mobile UX & Responsive Design
+
+### 7.1 Mobile-First Approach
+
+- All pages use responsive Tailwind classes with mobile-first breakpoints (`sm:`, `md:`)
+- Safe area insets: CSS utilities in `app/globals.css` (`.pb-safe`, `.mb-safe`, `.pt-safe`, `.px-safe`)
+- Viewport configuration: `viewportFit: 'cover'` in `app/layout.tsx` for safe area support
+- Touch targets: Minimum 44px height for all interactive elements
+- Typography: Responsive font scaling for better mobile readability
+
+### 7.2 Components with Mobile Optimizations
+
+- **Reflection Wizard** (`app/reflection/page.tsx`): Responsive padding, larger textareas, full-width buttons on mobile
+- **Review Reflections** (`app/read/page.tsx`): Improved spacing, larger text, better button layout
+- **AudioRecorder** (`components/audio-recorder.tsx`): Full-width buttons on mobile, better spacing
+- **Dashboard**: Export buttons and navigation optimized for mobile
+
+---
+
+## 8. Deployment Notes
 
 - Repo: `https://github.com/happypotomus/rose-bud-thorn` (now public).  
 - Vercel project builds from `main`. Earlier issues about old commit deployments were resolved once the repo was public and new commits were pushed.  
@@ -251,7 +269,7 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
 
 ---
 
-## 8. Chunk Status & Next Steps
+## 9. Chunk Status & Next Steps
 
 **Completed chunks:**
 
@@ -312,8 +330,10 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
       - Combines text + transcripts (prefers text, falls back to cleaned transcript)
     - **Bug fix:** Export reflection data serialization
       - Explicitly maps reflection data when passing from server to client component
+      - Converts empty strings to `null` for proper handling (empty strings come from audio-only submissions)
       - Ensures proper serialization of all fields (rose_text, bud_text, thorn_text, transcripts)
       - Fixes issue where export showed "(No response)" even when data existed in Supabase
+      - Handles cases where users only record audio (no typed text) - exports will show transcripts when available
 
 **Next chunk (not started yet):**
 
@@ -355,11 +375,25 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
 **Completed:** 13 of 14 chunks (93% complete)
 
 **Recent Bug Fixes (Post-Chunk 13):**
-- Fixed export reflection showing "(No response)" - explicit data serialization
+- Fixed export reflection showing "(No response)" - explicit data serialization with empty string to null conversion
 - Fixed unlock SMS not sending to users with phone numbers missing `+` prefix - phone number normalization
 - Added duplicate prevention for unlock SMS - checks notification_logs before sending
 - Added reading link to unlock SMS message - users can click to immediately view reflections
 - Improved auth redirect in reading page - unauthenticated users redirected to `/invite`
+
+**Mobile UX Improvements (Post-Chunk 13):**
+- Applied mobile-first responsive design across reflection wizard and review reflections section
+- Responsive padding: `px-4 py-6 sm:p-12 md:p-24` (reduced on mobile, full on desktop)
+- Larger touch targets: buttons minimum 44px height with `py-3` padding
+- Typography scaling: responsive font sizes (`text-base sm:text-lg`, `text-xl sm:text-2xl md:text-3xl`)
+- Full-width buttons on mobile: `w-full sm:w-auto` for easier tapping
+- Safe area support: Added CSS utilities (`.pb-safe`, `.mb-safe`) and viewport meta tag with `viewportFit: 'cover'`
+- Improved spacing: Increased gaps between elements, better card padding, more breathing room
+- Applied to:
+  - Reflection wizard (`app/reflection/page.tsx`)
+  - Review reflections section (`app/read/page.tsx`)
+  - AudioRecorder component (`components/audio-recorder.tsx`)
+  - Loading/error/bloom screens
 
 **Remaining Work:**
 - Final polish and QA
