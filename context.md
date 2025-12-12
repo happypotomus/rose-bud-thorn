@@ -137,10 +137,12 @@ File: `app/home/page.tsx`
   - `currentWeek` via `getCurrentWeek()`  
   - User’s reflection for that week  
   - Circle unlock status via `lib/supabase/unlock.ts`  
-- Three main states:
-  1. **No reflection yet** → shows “Your reflection isn’t done yet.” + **Start Reflection** button → `/reflection`  
-  2. **Reflection submitted but circle not unlocked** → “Your reflection is complete. We’ll text you when everyone is done.”  
-  3. **Circle unlocked** → shows `ReadingStatus` + **Read Reflections / Revisit** button.
+  - Mid-week join status via `lib/supabase/midweek-join.ts`  
+- Four main states:
+  1. **Mid-week joiner** → Shows: "The new round for the circle starts [next Sunday 7pm]. We'll notify you when the time is ready!" (prevents submission for current week)
+  2. **No reflection yet** → shows “Your reflection isn’t done yet.” + **Start Reflection** button → `/reflection`  
+  3. **Reflection submitted but circle not unlocked** → “Your reflection is complete. We’ll text you when everyone is done.”  
+  4. **Circle unlocked** → shows `ReadingStatus` + **Read Reflections / Revisit** button.
 
 `ReadingStatus` (`app/home/reading-status.tsx`):
 
@@ -155,7 +157,9 @@ File: `app/reflection/page.tsx`
 - Draft is stored in React state and persisted to `localStorage` as `reflection_draft_${weekId}`.  
 - On mount:
   - Loads `currentWeek` via `getCurrentWeekClient`.  
-  - Gets current user and circle membership.  
+  - Gets current user and circle membership (including `created_at`).  
+  - **Checks if user joined mid-week** (compares `circle_members.created_at` with `weeks.start_at`).  
+  - If joined mid-week, redirects to `/home` (prevents submission for current week).  
   - Loads any existing draft from `localStorage`.  
 - On submit:
   - Inserts into `reflections` (rose/bud/thorn text, `submitted_at`).  
@@ -168,13 +172,39 @@ File: `app/reflection/page.tsx`
 File: `lib/supabase/unlock.ts`
 
 - `isCircleUnlocked(circleId, weekId)`:
-  - Fetches circle members.  
-  - Checks that each member has a `reflections` row for that week with `submitted_at` not null.  
-  - Returns boolean (derived, not persisted).
+  - Fetches circle members with their `created_at` timestamps.  
+  - Filters to only members who joined **before or at** the week start (excludes mid-week joiners).  
+  - Checks that each pre-week member has a `reflections` row for that week with `submitted_at` not null.  
+  - Returns boolean (derived, not persisted).  
+  - **Mid-week joiners are excluded** from unlock requirements (they can't participate in the current week).
 
 Dashboard uses this to decide whether reading is available.
 
-### 5.5 Reading Flow (Friend-by-Friend)
+### 5.5 Mid-Week Join Handling
+
+Files:
+- `lib/supabase/midweek-join.ts` - Helper functions for mid-week join detection
+- `app/home/page.tsx` - Shows special message for mid-week joiners
+- `app/reflection/page.tsx` - Blocks access for mid-week joiners
+- `supabase/functions/sunday-reminder/index.ts` - Excludes mid-week joiners from reminders
+- `supabase/functions/monday-reminder/index.ts` - Excludes mid-week joiners from reminders
+
+Behavior:
+
+- **Detection**: Compares `circle_members.created_at` with `weeks.start_at` to determine if a user joined after the week started.
+- **Mid-week joiner flow**:
+  - User joins circle mid-week (e.g., Wednesday after week started Sunday 7pm).
+  - Home page shows: "The new round for the circle starts [next Sunday 7pm]. We'll notify you when the time is ready!"
+  - User cannot access `/reflection` page (redirects to home).
+  - User is excluded from unlock checks (doesn't block existing members from unlocking).
+  - User does not receive reminder SMS for the current week.
+  - User can participate starting from the next week (next Sunday 7pm).
+
+**Helper functions:**
+- `didUserJoinMidWeek(userId, weekId, supabaseClient?)` - Returns true if user joined after week started.
+- `getNextWeekStart(currentWeekEnd)` - Calculates next Sunday 7pm date for display.
+
+### 5.6 Reading Flow (Friend-by-Friend)
 
 File: `app/read/page.tsx` (client component)
 
@@ -291,6 +321,7 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
     - Manual trigger API routes (`/api/trigger-sunday-reminder`, `/api/trigger-monday-reminder`)
     - Uses Twilio REST API directly in Edge Functions (Deno environment)
     - Logs all notifications to `notification_logs` table
+    - **Updated:** Both reminder functions exclude mid-week joiners (only send to members who joined before/at week start)
 
 **Completed chunks (continued):**
 
@@ -401,6 +432,14 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
   - Review reflections section (`app/read/page.tsx`)
   - AudioRecorder component (`components/audio-recorder.tsx`)
   - Loading/error/bloom screens
+
+**Mid-Week Join Feature (Post-Chunk 13):**
+- Added mid-week join detection (`lib/supabase/midweek-join.ts`)
+- Updated unlock logic to exclude mid-week joiners from unlock requirements
+- Home page shows special message for mid-week joiners about next round starting Sunday 7pm
+- Reflection page blocks access for mid-week joiners (redirects to home)
+- Reminder SMS (Sunday/Monday) excludes mid-week joiners
+- **Scenario handled:** User joins Wednesday, everyone else finished Monday → new user sees message, can't submit, doesn't block unlock
 
 **Remaining Work:**
 - Final polish and QA

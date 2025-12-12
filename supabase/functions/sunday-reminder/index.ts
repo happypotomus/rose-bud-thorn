@@ -84,10 +84,10 @@ Deno.serve(async (req) => {
     let totalErrors = 0
 
     for (const circle of circles) {
-      // Get all members of this circle
+      // Get all members of this circle with their join time
       const { data: members, error: membersError } = await supabase
         .from('circle_members')
-        .select('user_id')
+        .select('user_id, created_at')
         .eq('circle_id', circle.id)
 
       if (membersError) {
@@ -100,8 +100,19 @@ Deno.serve(async (req) => {
         continue
       }
 
+      // Filter to only members who joined before or at the week start
+      // Mid-week joiners should not receive reminders for the current week
+      const weekStart = new Date(currentWeek.start_at)
+      const preWeekMembers = members.filter(
+        m => new Date(m.created_at) <= weekStart
+      )
+
+      if (preWeekMembers.length === 0) {
+        continue // No members were present at week start
+      }
+
       // Get profiles for these members (to get phone and first_name)
-      const userIds = members.map(m => m.user_id)
+      const userIds = preWeekMembers.map(m => m.user_id)
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, first_name, phone')

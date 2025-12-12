@@ -3,12 +3,13 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 /**
  * Check if a circle is unlocked for a given week
- * A circle is unlocked when all active members have submitted their reflections
+ * A circle is unlocked when all active members (who joined before the week started) have submitted their reflections
+ * Members who joined mid-week are excluded from the unlock check
  * 
  * @param circleId - The circle ID to check
  * @param weekId - The week ID to check
  * @param supabaseClient - Optional Supabase client (if not provided, creates one with server client)
- * @returns true if all members have submitted, false otherwise
+ * @returns true if all pre-week members have submitted, false otherwise
  */
 export async function isCircleUnlocked(
   circleId: string,
@@ -17,15 +18,40 @@ export async function isCircleUnlocked(
 ): Promise<boolean> {
   const supabase = supabaseClient || await createClient()
 
-  // Get all active circle members
+  // Get the week's start_at to determine which members were present at week start
+  const { data: week, error: weekError } = await supabase
+    .from('weeks')
+    .select('start_at')
+    .eq('id', weekId)
+    .single()
+
+  if (weekError || !week) {
+    console.error('Error fetching week:', weekError)
+    return false
+  }
+
+  const weekStart = new Date(week.start_at)
+
+  // Get all circle members with their join time
   const { data: members, error: membersError } = await supabase
     .from('circle_members')
-    .select('user_id')
+    .select('user_id, created_at')
     .eq('circle_id', circleId)
 
   if (membersError || !members || members.length === 0) {
     console.error('Error fetching circle members:', membersError)
     return false
+  }
+
+  // Filter to only members who joined before or at the week start
+  // These are the members who should have submitted reflections
+  const preWeekMemberIds = members
+    .filter(m => new Date(m.created_at) <= weekStart)
+    .map(m => m.user_id)
+
+  if (preWeekMemberIds.length === 0) {
+    // No members were present at week start, so circle is considered unlocked
+    return true
   }
 
   // Get all submitted reflections for this circle and week
@@ -42,18 +68,18 @@ export async function isCircleUnlocked(
   }
 
   // Create sets of user IDs for efficient lookup
-  const memberIds = new Set(members.map(m => m.user_id))
+  const preWeekMemberIdSet = new Set(preWeekMemberIds)
   const submittedUserIds = new Set(reflections?.map(r => r.user_id) || [])
 
-  // Check if every member has submitted
-  for (const memberId of memberIds) {
+  // Check if every pre-week member has submitted
+  for (const memberId of preWeekMemberIds) {
     if (!submittedUserIds.has(memberId)) {
-      // At least one member hasn't submitted
+      // At least one pre-week member hasn't submitted
       return false
     }
   }
 
-  // All members have submitted
+  // All pre-week members have submitted
   return true
 }
 

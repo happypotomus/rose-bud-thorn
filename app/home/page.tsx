@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentWeek } from '@/lib/supabase/week-server'
 import { isCircleUnlocked } from '@/lib/supabase/unlock'
+import { didUserJoinMidWeek, getNextWeekStart } from '@/lib/supabase/midweek-join'
 import { ReadingStatus } from './reading-status'
 import { ExportReflection } from './export-reflection'
 import { FlowerLogo } from '@/components/flower-logo'
@@ -90,6 +91,19 @@ export default async function HomePage() {
     .eq('week_id', currentWeek.id)
     .single()
 
+  // Check if user joined mid-week (after the current week started)
+  const joinedMidWeek = await didUserJoinMidWeek(user.id, currentWeek.id)
+  
+  // Debug logging
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Home page] Mid-week check result:', {
+      userId: user.id,
+      weekId: currentWeek.id,
+      weekStart: new Date(currentWeek.start_at).toISOString(),
+      joinedMidWeek
+    })
+  }
+
   // Check if circle is unlocked using real unlock logic
   const isUnlocked = await isCircleUnlocked(circleId, currentWeek.id)
 
@@ -98,9 +112,12 @@ export default async function HomePage() {
   const hasReadReflections = false // Will be checked client-side
 
   // Determine home state
-  let homeState: 'no_reflection' | 'waiting' | 'unlocked' | 'read' = 'no_reflection'
+  let homeState: 'no_reflection' | 'waiting' | 'unlocked' | 'read' | 'midweek_joiner' = 'no_reflection'
   
-  if (!reflection) {
+  if (joinedMidWeek) {
+    // User joined mid-week - show special message
+    homeState = 'midweek_joiner'
+  } else if (!reflection) {
     homeState = 'no_reflection'
   } else if (reflection && !isUnlocked) {
     homeState = 'waiting'
@@ -108,6 +125,9 @@ export default async function HomePage() {
     // Check reading status will be done client-side
     homeState = 'unlocked'
   }
+
+  // Calculate next week start for mid-week joiners
+  const nextWeekStart = joinedMidWeek ? getNextWeekStart(new Date(currentWeek.end_at)) : null
 
   // Explicitly map reflection data to ensure proper serialization when passing to client component
   // Convert empty strings to null for consistent handling (empty strings come from audio-only submissions)
@@ -124,11 +144,40 @@ export default async function HomePage() {
     submitted_at: reflection.submitted_at ?? null,
   } : null
 
+  // Format next week start date for display
+  const formatNextWeekStart = (date: Date): string => {
+    const options: Intl.DateTimeFormatOptions = { 
+      weekday: 'long', 
+      month: 'long', 
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }
+    return date.toLocaleDateString('en-US', options)
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 md:p-24 pt-safe pb-safe">
       <div className="text-center w-full max-w-2xl">
-        {/* State 1: No reflection yet - First time user design */}
-        {homeState === 'no_reflection' ? (
+        {/* State: Mid-week joiner */}
+        {homeState === 'midweek_joiner' && nextWeekStart ? (
+          <div className="space-y-5 sm:space-y-6">
+            <div className="flex justify-center mb-2 sm:mb-4">
+              <FlowerLogo size={72} className="sm:w-20 sm:h-20" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-black">
+              Welcome{profile?.first_name ? `, ${profile.first_name}` : ''}!
+            </h1>
+            <p className="text-base sm:text-lg md:text-xl text-gray-600">
+              The new round for the circle starts {formatNextWeekStart(nextWeekStart)}.
+            </p>
+            <p className="text-sm sm:text-base text-gray-500">
+              We'll notify you when the time is ready!
+            </p>
+          </div>
+        ) : homeState === 'no_reflection' ? (
+          /* State 1: No reflection yet - First time user design */
           <div className="space-y-5 sm:space-y-6">
             <div className="flex justify-center mb-2 sm:mb-4">
               <FlowerLogo size={72} className="sm:w-20 sm:h-20" />

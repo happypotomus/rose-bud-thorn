@@ -76,10 +76,10 @@ Deno.serve(async (req) => {
 
     // For each circle, find members who haven't submitted
     for (const circle of circles) {
-      // Get all members of this circle
+      // Get all members of this circle with their join time
       const { data: members, error: membersError } = await supabase
         .from('circle_members')
-        .select('user_id')
+        .select('user_id, created_at')
         .eq('circle_id', circle.id)
 
       if (membersError) {
@@ -92,7 +92,18 @@ Deno.serve(async (req) => {
         continue
       }
 
-      const userIds = members.map(m => m.user_id)
+      // Filter to only members who joined before or at the week start
+      // Mid-week joiners should not receive reminders for the current week
+      const weekStart = new Date(currentWeek.start_at)
+      const preWeekMembers = members.filter(
+        m => new Date(m.created_at) <= weekStart
+      )
+
+      if (preWeekMembers.length === 0) {
+        continue // No members were present at week start
+      }
+
+      const userIds = preWeekMembers.map(m => m.user_id)
 
       // Get reflections for this week and circle
       const { data: reflections, error: reflectionsError } = await supabase

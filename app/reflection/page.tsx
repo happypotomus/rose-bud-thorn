@@ -59,12 +59,22 @@ export default function ReflectionPage() {
         setUserId(user.id)
         const { data: membership } = await supabase
           .from('circle_members')
-          .select('circle_id')
+          .select('circle_id, created_at')
           .eq('user_id', user.id)
           .single()
         
         if (membership) {
           setCircleId(membership.circle_id)
+          
+          // Check if user joined mid-week (after the current week started)
+          const weekStart = new Date(week.start_at)
+          const joinTime = new Date(membership.created_at)
+          
+          if (joinTime > weekStart) {
+            // User joined mid-week - redirect to home
+            router.push('/home')
+            return
+          }
           
           // Load draft from localStorage
           const draftKey = `reflection_draft_${week.id}`
@@ -82,7 +92,7 @@ export default function ReflectionPage() {
     }
 
     loadData()
-  }, [supabase])
+  }, [supabase, router])
 
   // Save draft to localStorage whenever it changes
   useEffect(() => {
