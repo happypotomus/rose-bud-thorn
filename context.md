@@ -381,6 +381,13 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
 - Added reading link to unlock SMS message - users can click to immediately view reflections
 - Improved auth redirect in reading page - unauthenticated users redirected to `/invite`
 
+**Recent UX Improvements (Post-Chunk 13):**
+- Audio recorder: Fixed progress bar real-time updates during playback, added playback speed controls (1x/1.5x), added restart button
+- Audio recorder state management: Fixed audio persisting across reflection steps (rose/bud/thorn) - now properly resets per section
+- Navigation buttons: Updated to always display on same line with 50/50 split (Back/Next buttons)
+- Review page: Added emoji icons (🌹 Rose, 🌱 Bud, 🌵 Thorn) to section headings
+- Export feature: Enhanced to show "Audio response" for audio-only submissions instead of "(No response)"
+
 **Mobile UX Improvements (Post-Chunk 13):**
 - Applied mobile-first responsive design across reflection wizard and review reflections section
 - Responsive padding: `px-4 py-6 sm:p-12 md:p-24` (reduced on mobile, full on desktop)
