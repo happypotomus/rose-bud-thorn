@@ -31,7 +31,7 @@ export function ReadingStatus({ weekId, isUnlocked }: ReadingStatusProps) {
         </p>
         <Link
           href="/read"
-          className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 font-medium"
+          className="inline-block bg-rose text-white px-6 py-3 rounded-md hover:bg-rose-dark font-medium"
         >
           Revisit this week's reflections
         </Link>
@@ -46,7 +46,7 @@ export function ReadingStatus({ weekId, isUnlocked }: ReadingStatusProps) {
       </p>
       <Link
         href="/read"
-        className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 font-medium"
+        className="inline-block bg-rose text-white px-6 py-3 rounded-md hover:bg-rose-dark font-medium"
       >
         Read Reflections
       </Link>

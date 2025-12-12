@@ -237,7 +237,7 @@ export default function ReadPage() {
           </p>
           <Link
             href="/dashboard"
-            className="inline-block w-full sm:w-auto bg-blue-600 text-white px-6 sm:px-8 py-3 text-base sm:text-lg rounded-md hover:bg-blue-700 font-medium"
+            className="inline-block w-full sm:w-auto bg-rose text-white px-6 sm:px-8 py-3 text-base sm:text-lg rounded-md hover:bg-rose-dark font-medium"
           >
             Return to Dashboard
           </Link>
@@ -369,14 +369,14 @@ export default function ReadPage() {
           {isLastFriend ? (
             <button
               onClick={handleContinue}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 text-base sm:text-lg bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 text-base sm:text-lg bg-rose text-white rounded-md hover:bg-rose-dark font-medium"
             >
               Finish Reading
             </button>
           ) : (
             <button
               onClick={handleContinue}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 text-base sm:text-lg bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 text-base sm:text-lg bg-rose text-white rounded-md hover:bg-rose-dark font-medium"
             >
               See {friends[currentIndex + 1]?.first_name}'s entry
             </button>

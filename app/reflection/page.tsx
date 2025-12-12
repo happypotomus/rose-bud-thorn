@@ -255,7 +255,7 @@ export default function ReflectionPage() {
                 <div
                   className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full text-sm sm:text-base font-semibold ${
                     currentStep === step
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-rose text-white'
                       : steps.indexOf(currentStep) > index
                       ? 'bg-green-500 text-white'
                       : 'bg-gray-200 text-gray-600'
@@ -292,7 +292,7 @@ export default function ReflectionPage() {
                 value={draft.rose}
                 onChange={(e) => updateDraft('rose', e.target.value)}
                 placeholder="Share what went well this week..."
-                className="w-full min-h-[180px] sm:min-h-[200px] md:h-48 p-4 sm:p-5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full min-h-[180px] sm:min-h-[200px] md:h-48 p-4 sm:p-5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-rose focus:border-transparent resize-none"
               />
               {userId && weekId && (
                 <AudioRecorder
@@ -313,7 +313,7 @@ export default function ReflectionPage() {
                 value={draft.bud}
                 onChange={(e) => updateDraft('bud', e.target.value)}
                 placeholder="What's emerging or full of potential?"
-                className="w-full min-h-[180px] sm:min-h-[200px] md:h-48 p-4 sm:p-5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full min-h-[180px] sm:min-h-[200px] md:h-48 p-4 sm:p-5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-rose focus:border-transparent resize-none"
               />
               {userId && weekId && (
                 <AudioRecorder
@@ -334,7 +334,7 @@ export default function ReflectionPage() {
                 value={draft.thorn}
                 onChange={(e) => updateDraft('thorn', e.target.value)}
                 placeholder="What was challenging this week?"
-                className="w-full min-h-[180px] sm:min-h-[200px] md:h-48 p-4 sm:p-5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full min-h-[180px] sm:min-h-[200px] md:h-48 p-4 sm:p-5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-rose focus:border-transparent resize-none"
               />
               {userId && weekId && (
                 <AudioRecorder
@@ -401,7 +401,7 @@ export default function ReflectionPage() {
                 (!draft.bud.trim() && !draft.bud_audio_url) ||
                 (!draft.thorn.trim() && !draft.thorn_audio_url)
               }
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3 text-base sm:text-lg bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3 text-base sm:text-lg bg-rose text-white rounded-md hover:bg-rose-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               {loading ? 'Submitting...' : 'Submit Reflection'}
             </button>
@@ -409,7 +409,7 @@ export default function ReflectionPage() {
             <button
               onClick={handleNext}
               disabled={!canProceed(currentStep) || loading}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3 text-base sm:text-lg bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3 text-base sm:text-lg bg-rose text-white rounded-md hover:bg-rose-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               Next
             </button>

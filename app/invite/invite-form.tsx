@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { FlowerLogo } from '@/components/flower-logo'
 
 export default function InviteForm() {
   const searchParams = useSearchParams()
@@ -21,10 +22,10 @@ export default function InviteForm() {
   // Invalid token handling
   if (!token) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-24">
-        <div className="text-center max-w-md">
-          <h1 className="text-2xl font-bold mb-4">Invalid Invite Link</h1>
-          <p className="text-gray-600">
+      <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 bg-white pt-safe pb-safe">
+        <div className="text-center max-w-md px-4">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-4">Invalid Invite Link</h1>
+          <p className="text-gray-600 text-sm sm:text-base">
             This invite link doesn't seem to be active. It might be old or typed incorrectly. 
             Please ask the person who invited you to resend it.
           </p>
@@ -153,18 +154,21 @@ export default function InviteForm() {
 
   if (otpSent) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-24">
-        <div className="w-full max-w-md space-y-6">
+      <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 bg-white pt-safe pb-safe">
+        <div className="w-full max-w-md space-y-5 sm:space-y-6">
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-2">Verify Your Phone</h1>
-            <p className="text-gray-600">
+            <div className="flex justify-center mb-4 sm:mb-6">
+              <FlowerLogo size={56} className="sm:w-16 sm:h-16" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3 text-black px-2">Verify Your Phone</h1>
+            <p className="text-gray-600 text-sm sm:text-base md:text-lg px-2">
               We sent a code to {phone}. Please enter it below.
             </p>
           </div>
 
-          <form onSubmit={handleVerifyOTP} className="space-y-4">
+          <form onSubmit={handleVerifyOTP} className="space-y-4 sm:space-y-5">
             <div>
-              <label htmlFor="otp" className="block text-sm font-medium mb-2">
+              <label htmlFor="otp" className="block text-sm font-medium mb-2 text-black">
                 Verification Code
               </label>
               <input
@@ -175,18 +179,23 @@ export default function InviteForm() {
                 placeholder="Enter 6-digit code"
                 maxLength={6}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autoComplete="one-time-code"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                className="w-full px-4 py-3.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose focus:border-transparent text-base text-center text-2xl tracking-widest touch-manipulation min-h-[44px]"
               />
             </div>
 
             {error && (
-              <div className="text-red-600 text-sm">{error}</div>
+              <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
+                {error}
+              </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-rose text-white py-3.5 sm:py-3 px-6 rounded-lg hover:bg-rose-dark active:bg-rose-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base sm:text-lg transition-colors touch-manipulation min-h-[44px] flex items-center justify-center"
             >
               {loading ? 'Verifying...' : 'Verify'}
             </button>
@@ -197,18 +206,21 @@ export default function InviteForm() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="w-full max-w-md space-y-6">
+    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 bg-white pt-safe pb-safe">
+      <div className="w-full max-w-md space-y-5 sm:space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Join Your Circle</h1>
-          <p className="text-gray-600">
-            Enter your information to get started
+          <div className="flex justify-center mb-4 sm:mb-6">
+            <FlowerLogo size={56} className="sm:w-16 sm:h-16" />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3 text-black px-2">Join Your Circle</h1>
+          <p className="text-gray-600 text-sm sm:text-base md:text-lg px-2">
+            You've been invited to join a weekly reflection circle.
           </p>
         </div>
 
-        <form onSubmit={handleSendOTP} className="space-y-4">
+        <form onSubmit={handleSendOTP} className="space-y-4 sm:space-y-5">
           <div>
-            <label htmlFor="firstName" className="block text-sm font-medium mb-2">
+            <label htmlFor="firstName" className="block text-sm font-medium mb-2 text-black">
               First Name
             </label>
             <input
@@ -216,14 +228,15 @@ export default function InviteForm() {
               type="text"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              placeholder="Your first name"
+              placeholder="Enter your first name"
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              autoComplete="given-name"
+              className="w-full px-4 py-3.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose focus:border-transparent text-base touch-manipulation min-h-[44px]"
             />
           </div>
 
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium mb-2">
+            <label htmlFor="phone" className="block text-sm font-medium mb-2 text-black">
               Phone Number
             </label>
             <input
@@ -231,25 +244,26 @@ export default function InviteForm() {
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+1234567890"
+              placeholder="(555) 123-4567"
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              autoComplete="tel"
+              inputMode="tel"
+              className="w-full px-4 py-3.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose focus:border-transparent text-base touch-manipulation min-h-[44px]"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Include country code (e.g., +1 for US)
-            </p>
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm">{error}</div>
+            <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
+              {error}
+            </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-rose text-white py-3.5 sm:py-3 px-6 rounded-lg hover:bg-rose-dark active:bg-rose-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base sm:text-lg transition-colors touch-manipulation min-h-[44px] flex items-center justify-center"
           >
-            {loading ? 'Sending Code...' : 'Send Verification Code'}
+            {loading ? 'Sending Code...' : 'Continue'}
           </button>
         </form>
       </div>

@@ -86,5 +86,10 @@
   .mb-safe {
     margin-bottom: env(safe-area-inset-bottom, 0);
   }
+  
+  /* Improve touch responsiveness on mobile */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
 }
 

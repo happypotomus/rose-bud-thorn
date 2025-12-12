@@ -132,7 +132,7 @@ export default async function DashboardPage() {
             </p>
             <a
               href="/reflection"
-              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 font-medium"
+              className="inline-block bg-rose text-white px-6 py-3 rounded-md hover:bg-rose-dark font-medium"
             >
               Start Reflection
             </a>

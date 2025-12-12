@@ -50,6 +50,20 @@ const config: Config = {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        rose: {
+          DEFAULT: "#E94C60",
+          light: "#EA5273",
+          dark: "#D43C50",
+          50: "#FDF2F4",
+          100: "#FCE7EA",
+          200: "#F9D0D6",
+        },
+        bud: {
+          DEFAULT: "#6FCF97",
+        },
+        thorn: {
+          DEFAULT: "#9B51E0",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
