@@ -213,7 +213,7 @@ export function AudioRecorder({
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
             <button
               onClick={uploadAudio}
-              className="w-full sm:w-auto px-6 sm:px-4 py-3 sm:py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-base sm:text-sm font-medium"
+              className="w-full sm:w-auto px-6 sm:px-4 py-3 sm:py-2 bg-rose text-white rounded-md hover:bg-rose-dark active:bg-rose-dark text-base sm:text-sm font-medium transition-colors"
             >
               Keep & Upload
             </button>
@@ -290,7 +290,7 @@ export function AudioRecorder({
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
             <button
               onClick={uploadAudio}
-              className="w-full sm:w-auto px-6 sm:px-4 py-3 sm:py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-base sm:text-sm font-medium"
+              className="w-full sm:w-auto px-6 sm:px-4 py-3 sm:py-2 bg-rose text-white rounded-md hover:bg-rose-dark active:bg-rose-dark text-base sm:text-sm font-medium transition-colors"
             >
               Retry Upload
             </button>

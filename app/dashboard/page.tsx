@@ -4,6 +4,7 @@ import { getCurrentWeek } from '@/lib/supabase/week-server'
 import { isCircleUnlocked } from '@/lib/supabase/unlock'
 import { ReadingStatus } from './reading-status'
 import { ExportReflection } from './export-reflection'
+import { FlowerLogo } from '@/components/flower-logo'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -120,74 +121,70 @@ export default async function DashboardPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 md:p-24 pt-safe pb-safe">
       <div className="text-center w-full max-w-2xl">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
-          Welcome{profile?.first_name ? `, ${profile.first_name}` : ''}!
-        </h1>
-        
-        {/* State 1: No reflection yet */}
-        {dashboardState === 'no_reflection' && (
-          <div className="space-y-4 sm:space-y-6">
-            <p className="text-base sm:text-lg md:text-xl text-gray-600">
-              Your reflection isn't done yet.
-            </p>
-            <a
-              href="/reflection"
-              className="inline-block bg-rose text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg hover:bg-rose-dark active:bg-rose-dark font-medium text-base sm:text-lg transition-colors touch-manipulation min-h-[44px] flex items-center justify-center"
-            >
-              Start Reflection
-            </a>
-          </div>
-        )}
-
-        {/* State 2: Reflection submitted but circle not unlocked */}
-        {dashboardState === 'waiting' && reflectionData && (
-          <div className="space-y-4 sm:space-y-6">
-            <p className="text-base sm:text-lg md:text-xl text-gray-600">
-              Your reflection is complete.
-            </p>
-            <p className="text-sm sm:text-base text-gray-500">
-              We'll text you when everyone is done.
+        {/* State 1: No reflection yet - First time user design */}
+        {dashboardState === 'no_reflection' ? (
+          <div className="space-y-5 sm:space-y-6">
+            <div className="flex justify-center mb-2 sm:mb-4">
+              <FlowerLogo size={72} className="sm:w-20 sm:h-20" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-black">
+              Get started with your first reflection
+            </h1>
+            <p className="text-base sm:text-lg text-gray-600">
+              Take a moment to reflect on your week.
             </p>
             <div className="pt-2 sm:pt-4">
-              <ExportReflection 
-                reflection={reflectionData}
-                weekStartDate={new Date(currentWeek.start_at)}
-                weekEndDate={new Date(currentWeek.end_at)}
-              />
+              <a
+                href="/reflection"
+                className="inline-block bg-rose text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg hover:bg-rose-dark active:bg-rose-dark font-medium text-base sm:text-lg transition-colors touch-manipulation min-h-[44px] flex items-center justify-center"
+              >
+                Start Reflection
+              </a>
             </div>
           </div>
-        )}
-
-        {/* State 3: Circle unlocked */}
-        {dashboardState === 'unlocked' && (
-          <div className="space-y-4 sm:space-y-6">
-            <ReadingStatus weekId={currentWeek.id} isUnlocked={isUnlocked} />
-            {reflectionData && (
-              <div className="pt-2 sm:pt-4">
-                <ExportReflection 
-                  reflection={reflectionData}
-                  weekStartDate={new Date(currentWeek.start_at)}
-                  weekEndDate={new Date(currentWeek.end_at)}
-                />
+        ) : (
+          <>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
+              Welcome{profile?.first_name ? `, ${profile.first_name}` : ''}!
+            </h1>
+            
+            {/* State 2: Reflection submitted but circle not unlocked */}
+            {dashboardState === 'waiting' && reflectionData && (
+              <div className="space-y-4 sm:space-y-6">
+                <p className="text-base sm:text-lg md:text-xl text-gray-600">
+                  Your reflection is complete.
+                </p>
+                <p className="text-sm sm:text-base text-gray-500">
+                  We'll text you when everyone is done.
+                </p>
+                <div className="pt-2 sm:pt-4">
+                  <ExportReflection 
+                    reflection={reflectionData}
+                    weekStartDate={new Date(currentWeek.start_at)}
+                    weekEndDate={new Date(currentWeek.end_at)}
+                  />
+                </div>
               </div>
             )}
-          </div>
+
+            {/* State 3: Circle unlocked */}
+            {dashboardState === 'unlocked' && (
+              <div className="space-y-4 sm:space-y-6">
+                <ReadingStatus weekId={currentWeek.id} isUnlocked={isUnlocked} />
+                {reflectionData && (
+                  <div className="pt-2 sm:pt-4">
+                    <ExportReflection 
+                      reflection={reflectionData}
+                      weekStartDate={new Date(currentWeek.start_at)}
+                      weekEndDate={new Date(currentWeek.end_at)}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         )}
 
-        {/* Debug info (can remove later) */}
-        <div className="mt-6 sm:mt-8 space-y-2">
-          <div className="bg-gray-100 p-3 sm:p-4 rounded-lg text-left">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
-              <strong>Circle:</strong> {circleName}
-            </p>
-            <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
-              <strong>Week:</strong> {new Date(currentWeek.start_at).toLocaleDateString()} - {new Date(currentWeek.end_at).toLocaleDateString()}
-            </p>
-            <p className="text-xs sm:text-sm text-gray-600">
-              <strong>State:</strong> {dashboardState} | <strong>Unlocked:</strong> {isUnlocked ? 'Yes' : 'No'}
-            </p>
-          </div>
-        </div>
       </div>
     </main>
   )
