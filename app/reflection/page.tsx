@@ -353,27 +353,57 @@ export default function ReflectionPage() {
             <div className="space-y-6 sm:space-y-8">
               <div>
                 <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4">Rose</h3>
-                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
-                  {draft.rose || '(empty)'}
-                </p>
+                {draft.rose ? (
+                  <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                    {draft.rose}
+                  </p>
+                ) : draft.rose_audio_url ? (
+                  <p className="text-gray-600 italic bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                    Audio response
+                  </p>
+                ) : (
+                  <p className="text-gray-500 italic bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                    (empty)
+                  </p>
+                )}
                 {draft.rose_audio_url && (
                   <audio src={draft.rose_audio_url} controls className="w-full" />
                 )}
               </div>
               <div>
                 <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4">Bud</h3>
-                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
-                  {draft.bud || '(empty)'}
-                </p>
+                {draft.bud ? (
+                  <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                    {draft.bud}
+                  </p>
+                ) : draft.bud_audio_url ? (
+                  <p className="text-gray-600 italic bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                    Audio response
+                  </p>
+                ) : (
+                  <p className="text-gray-500 italic bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                    (empty)
+                  </p>
+                )}
                 {draft.bud_audio_url && (
                   <audio src={draft.bud_audio_url} controls className="w-full" />
                 )}
               </div>
               <div>
                 <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4">Thorn</h3>
-                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
-                  {draft.thorn || '(empty)'}
-                </p>
+                {draft.thorn ? (
+                  <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                    {draft.thorn}
+                  </p>
+                ) : draft.thorn_audio_url ? (
+                  <p className="text-gray-600 italic bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                    Audio response
+                  </p>
+                ) : (
+                  <p className="text-gray-500 italic bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                    (empty)
+                  </p>
+                )}
                 {draft.thorn_audio_url && (
                   <audio src={draft.thorn_audio_url} controls className="w-full" />
                 )}

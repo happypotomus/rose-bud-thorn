@@ -269,9 +269,19 @@ export default function ReadPage() {
             {/* Rose Section */}
             <div>
               <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4 text-rose-600">🌹 Rose</h3>
-              <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
-                {currentFriend.rose_text || '(No response)'}
-              </p>
+              {currentFriend.rose_text ? (
+                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                  {currentFriend.rose_text}
+                </p>
+              ) : currentFriend.rose_audio_url ? (
+                <p className="text-gray-600 italic bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                  Audio response
+                </p>
+              ) : (
+                <p className="text-gray-500 italic bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                  (No response)
+                </p>
+              )}
               {currentFriend.rose_audio_url && (
                 <div className="mt-4 sm:mt-3 space-y-3 sm:space-y-2">
                   <audio src={currentFriend.rose_audio_url} controls className="w-full" />
@@ -301,9 +311,19 @@ export default function ReadPage() {
             {/* Bud Section */}
             <div>
               <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4 text-green-600">🌱 Bud</h3>
-              <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
-                {currentFriend.bud_text || '(No response)'}
-              </p>
+              {currentFriend.bud_text ? (
+                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                  {currentFriend.bud_text}
+                </p>
+              ) : currentFriend.bud_audio_url ? (
+                <p className="text-gray-600 italic bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                  Audio response
+                </p>
+              ) : (
+                <p className="text-gray-500 italic bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                  (No response)
+                </p>
+              )}
               {currentFriend.bud_audio_url && (
                 <div className="mt-4 sm:mt-3 space-y-3 sm:space-y-2">
                   <audio src={currentFriend.bud_audio_url} controls className="w-full" />
@@ -333,9 +353,19 @@ export default function ReadPage() {
             {/* Thorn Section */}
             <div>
               <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4 text-orange-600">🌵 Thorn</h3>
-              <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
-                {currentFriend.thorn_text || '(No response)'}
-              </p>
+              {currentFriend.thorn_text ? (
+                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                  {currentFriend.thorn_text}
+                </p>
+              ) : currentFriend.thorn_audio_url ? (
+                <p className="text-gray-600 italic bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                  Audio response
+                </p>
+              ) : (
+                <p className="text-gray-500 italic bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
+                  (No response)
+                </p>
+              )}
               {currentFriend.thorn_audio_url && (
                 <div className="mt-4 sm:mt-3 space-y-3 sm:space-y-2">
                   <audio src={currentFriend.thorn_audio_url} controls className="w-full" />
