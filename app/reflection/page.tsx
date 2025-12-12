@@ -261,7 +261,10 @@ export default function ReflectionPage() {
             <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">Review your reflection before submitting</p>
             <div className="space-y-6 sm:space-y-8">
               <div>
-                <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4">Rose</h3>
+                <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4 flex items-center gap-2">
+                  <FlowerLogo size={24} className="sm:w-6 sm:h-6" />
+                  Rose
+                </h3>
                 {draft.rose ? (
                   <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
                     {draft.rose}
@@ -280,7 +283,10 @@ export default function ReflectionPage() {
                 )}
               </div>
               <div>
-                <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4">Bud</h3>
+                <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4 flex items-center gap-2">
+                  <span className="text-2xl sm:text-3xl">🌱</span>
+                  Bud
+                </h3>
                 {draft.bud ? (
                   <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
                     {draft.bud}
@@ -299,7 +305,10 @@ export default function ReflectionPage() {
                 )}
               </div>
               <div>
-                <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4">Thorn</h3>
+                <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4 flex items-center gap-2">
+                  <span className="text-2xl sm:text-3xl">🌵</span>
+                  Thorn
+                </h3>
                 {draft.thorn ? (
                   <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
                     {draft.thorn}
