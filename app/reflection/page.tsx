@@ -245,15 +245,15 @@ export default function ReflectionPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:p-12 md:p-24 pb-safe mb-safe">
       <div className="w-full max-w-2xl">
         {/* Progress indicator */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="flex items-center justify-between mb-2">
             {(['rose', 'bud', 'thorn', 'review'] as Step[]).map((step, index) => (
               <div key={step} className="flex items-center flex-1">
                 <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-full ${
+                  className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full text-sm sm:text-base font-semibold ${
                     currentStep === step
                       ? 'bg-blue-600 text-white'
                       : steps.indexOf(currentStep) > index
@@ -265,7 +265,7 @@ export default function ReflectionPage() {
                 </div>
                 {index < 3 && (
                   <div
-                    className={`flex-1 h-1 mx-2 ${
+                    className={`flex-1 h-1.5 sm:h-2 mx-1 sm:mx-2 ${
                       steps.indexOf(currentStep) > index ? 'bg-green-500' : 'bg-gray-200'
                     }`}
                   />
@@ -276,9 +276,9 @@ export default function ReflectionPage() {
         </div>
 
         {/* Step content */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
-          <h2 className="text-2xl font-bold mb-2">{stepTitles[currentStep]}</h2>
-          <p className="text-gray-600 mb-6">{stepDescriptions[currentStep]}</p>
+        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8 mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">{stepTitles[currentStep]}</h2>
+          <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">{stepDescriptions[currentStep]}</p>
 
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -287,12 +287,12 @@ export default function ReflectionPage() {
           )}
 
           {currentStep === 'rose' && (
-            <div>
+            <div className="space-y-4 sm:space-y-6">
               <textarea
                 value={draft.rose}
                 onChange={(e) => updateDraft('rose', e.target.value)}
                 placeholder="Share what went well this week..."
-                className="w-full h-48 p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full min-h-[180px] sm:min-h-[200px] md:h-48 p-4 sm:p-5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               />
               {userId && weekId && (
                 <AudioRecorder
@@ -308,12 +308,12 @@ export default function ReflectionPage() {
           )}
 
           {currentStep === 'bud' && (
-            <div>
+            <div className="space-y-4 sm:space-y-6">
               <textarea
                 value={draft.bud}
                 onChange={(e) => updateDraft('bud', e.target.value)}
                 placeholder="What's emerging or full of potential?"
-                className="w-full h-48 p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full min-h-[180px] sm:min-h-[200px] md:h-48 p-4 sm:p-5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               />
               {userId && weekId && (
                 <AudioRecorder
@@ -329,12 +329,12 @@ export default function ReflectionPage() {
           )}
 
           {currentStep === 'thorn' && (
-            <div>
+            <div className="space-y-4 sm:space-y-6">
               <textarea
                 value={draft.thorn}
                 onChange={(e) => updateDraft('thorn', e.target.value)}
                 placeholder="What was challenging this week?"
-                className="w-full h-48 p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full min-h-[180px] sm:min-h-[200px] md:h-48 p-4 sm:p-5 text-base border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               />
               {userId && weekId && (
                 <AudioRecorder
@@ -350,10 +350,10 @@ export default function ReflectionPage() {
           )}
 
           {currentStep === 'review' && (
-            <div className="space-y-6">
+            <div className="space-y-6 sm:space-y-8">
               <div>
-                <h3 className="font-semibold text-lg mb-2">Rose</h3>
-                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded mb-2">
+                <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4">Rose</h3>
+                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
                   {draft.rose || '(empty)'}
                 </p>
                 {draft.rose_audio_url && (
@@ -361,8 +361,8 @@ export default function ReflectionPage() {
                 )}
               </div>
               <div>
-                <h3 className="font-semibold text-lg mb-2">Bud</h3>
-                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded mb-2">
+                <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4">Bud</h3>
+                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
                   {draft.bud || '(empty)'}
                 </p>
                 {draft.bud_audio_url && (
@@ -370,8 +370,8 @@ export default function ReflectionPage() {
                 )}
               </div>
               <div>
-                <h3 className="font-semibold text-lg mb-2">Thorn</h3>
-                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded mb-2">
+                <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4">Thorn</h3>
+                <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 sm:p-5 rounded mb-3 sm:mb-4 text-base sm:text-lg">
                   {draft.thorn || '(empty)'}
                 </p>
                 {draft.thorn_audio_url && (
@@ -383,11 +383,11 @@ export default function ReflectionPage() {
         </div>
 
         {/* Navigation buttons */}
-        <div className="flex justify-between">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:justify-between pb-4 sm:pb-0">
           <button
             onClick={handleBack}
             disabled={currentStep === 'rose' || loading}
-            className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3 text-base sm:text-lg border-2 border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
             Back
           </button>
@@ -401,7 +401,7 @@ export default function ReflectionPage() {
                 (!draft.bud.trim() && !draft.bud_audio_url) ||
                 (!draft.thorn.trim() && !draft.thorn_audio_url)
               }
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3 text-base sm:text-lg bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               {loading ? 'Submitting...' : 'Submit Reflection'}
             </button>
@@ -409,7 +409,7 @@ export default function ReflectionPage() {
             <button
               onClick={handleNext}
               disabled={!canProceed(currentStep) || loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3 text-base sm:text-lg bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               Next
             </button>

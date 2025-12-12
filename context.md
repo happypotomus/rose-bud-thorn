@@ -217,6 +217,10 @@ Files:
 
 - `lib/twilio/sms.ts`  
   - `sendSMS(to: string, message: string): Promise<string>`  
+  - `normalizePhoneNumber(phone: string): string` - Normalizes phone numbers to E.164 format
+    - Handles numbers with or without `+` prefix
+    - Assumes US numbers (+1) if no country code is present
+    - Automatically called by `sendSMS` before sending
   - Uses `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`.  
   - Throws a detailed error if any env vars are missing.
 - `app/api/test-sms/route.ts`  
@@ -278,6 +282,11 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
     - Integrated into reflection submission flow
     - Sends SMS to all circle members when everyone has submitted
     - Logs to `notification_logs` with type `unlock`
+    - **Bug fixes:**
+      - Phone number normalization: Automatically converts phone numbers to E.164 format before sending
+      - Duplicate prevention: Checks `notification_logs` to prevent sending multiple unlock SMS to the same user for the same week
+      - Reading link: SMS message includes a link to `/read` page so users can immediately view reflections
+      - Base URL detection: Extracts app URL from request headers (production) or environment variables
 
 **Completed chunks (continued):**
 
@@ -301,6 +310,10 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
       - Download as text (.txt)
       - Download as Markdown (.md)
       - Combines text + transcripts (prefers text, falls back to cleaned transcript)
+    - **Bug fix:** Export reflection data serialization
+      - Explicitly maps reflection data when passing from server to client component
+      - Ensures proper serialization of all fields (rose_text, bud_text, thorn_text, transcripts)
+      - Fixes issue where export showed "(No response)" even when data existed in Supabase
 
 **Next chunk (not started yet):**
 
@@ -340,6 +353,13 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
 ## 🎯 Quick Status Summary
 
 **Completed:** 13 of 14 chunks (93% complete)
+
+**Recent Bug Fixes (Post-Chunk 13):**
+- Fixed export reflection showing "(No response)" - explicit data serialization
+- Fixed unlock SMS not sending to users with phone numbers missing `+` prefix - phone number normalization
+- Added duplicate prevention for unlock SMS - checks notification_logs before sending
+- Added reading link to unlock SMS message - users can click to immediately view reflections
+- Improved auth redirect in reading page - unauthenticated users redirected to `/invite`
 
 **Remaining Work:**
 - Final polish and QA
