@@ -16,6 +16,11 @@ export function ExportReflection({ reflection, weekStartDate, weekEndDate }: Exp
   const handleCopy = async () => {
     // Debug: log reflection data to see what we're working with
     console.log('Export reflection data:', reflection)
+    console.log('Transcripts:', {
+      rose: reflection.rose_transcript,
+      bud: reflection.bud_transcript,
+      thorn: reflection.thorn_transcript,
+    })
     const text = formatReflectionAsText(reflection, weekStartDate, weekEndDate)
     console.log('Formatted text:', text)
     const success = await copyToClipboard(text)

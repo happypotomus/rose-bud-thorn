@@ -17,23 +17,33 @@ export type ReflectionData = {
 
 /**
  * Gets the display content for a section
- * Prefers text over transcript, but uses transcript if text is empty
- * If neither exists but audio URL exists, returns "Audio response"
- * For export: we want the cleaned transcript (which is already cleaned by GPT)
+ * Priority: user-typed text > GPT transcript > "Audio response" (if audio exists) > empty
+ * For export: we want the actual content, not just "Audio response"
  */
 function getSectionContent(text: string | null, transcript: string | null, audioUrl?: string | null): string {
-  // If text exists and is not empty, use it (user typed it)
-  if (text && text.trim().length > 0) {
-    return text.trim()
+  // Helper to check if a string has actual content
+  const hasContent = (str: string | null | undefined): boolean => {
+    return str != null && typeof str === 'string' && str.trim().length > 0
   }
-  // Otherwise, use the cleaned transcript (GPT has already removed uhs/ums)
-  if (transcript && transcript.trim().length > 0) {
-    return transcript.trim()
+  
+  // Priority 1: If user typed text, use it (user typed it)
+  if (hasContent(text)) {
+    return (text as string).trim()
   }
-  // If audio exists but no text/transcript, indicate audio response
-  if (audioUrl && audioUrl.trim().length > 0) {
+  
+  // Priority 2: If GPT transcript exists, use it (this is the cleaned transcription)
+  // This is the actual transcript content, not just "Audio response"
+  if (hasContent(transcript)) {
+    return (transcript as string).trim()
+  }
+  
+  // Priority 3: If audio exists but no text/transcript available yet, indicate audio response
+  // This should only happen if transcription hasn't completed or failed
+  if (hasContent(audioUrl)) {
     return 'Audio response'
   }
+  
+  // Priority 4: No content at all
   return ''
 }
 
