@@ -32,6 +32,7 @@ export function AudioRecorder({
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
+  const [playbackRate, setPlaybackRate] = useState(1)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -45,9 +46,18 @@ export function AudioRecorder({
     if (audioUrl && state === 'uploaded') {
       const audio = new Audio(audioUrl)
       audioRef.current = audio
+      audio.playbackRate = playbackRate
 
-      const updateTime = () => setCurrentTime(audio.currentTime)
-      const updateDuration = () => setDuration(audio.duration)
+      const updateTime = () => {
+        if (audio && !isNaN(audio.currentTime)) {
+          setCurrentTime(audio.currentTime)
+        }
+      }
+      const updateDuration = () => {
+        if (audio && !isNaN(audio.duration)) {
+          setDuration(audio.duration)
+        }
+      }
       const handleEnded = () => {
         setIsPlaying(false)
         setCurrentTime(0)
@@ -55,13 +65,20 @@ export function AudioRecorder({
       const handlePlay = () => setIsPlaying(true)
       const handlePause = () => setIsPlaying(false)
 
-      audio.addEventListener('timeupdate', updateTime)
+      // Update time more frequently for smoother progress bar
+      const timeInterval = setInterval(updateTime, 100)
+      
       audio.addEventListener('loadedmetadata', updateDuration)
       audio.addEventListener('ended', handleEnded)
       audio.addEventListener('play', handlePlay)
       audio.addEventListener('pause', handlePause)
+      audio.addEventListener('timeupdate', updateTime)
+
+      // Load metadata immediately
+      audio.load()
 
       return () => {
+        clearInterval(timeInterval)
         audio.removeEventListener('timeupdate', updateTime)
         audio.removeEventListener('loadedmetadata', updateDuration)
         audio.removeEventListener('ended', handleEnded)
@@ -71,7 +88,7 @@ export function AudioRecorder({
         audioRef.current = null
       }
     }
-  }, [audioUrl, state])
+  }, [audioUrl, state, playbackRate])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -97,21 +114,38 @@ export function AudioRecorder({
       if (isPlaying) {
         audioRef.current.pause()
       } else {
-        audioRef.current.play()
+        audioRef.current.play().catch(err => {
+          console.error('Error playing audio:', err)
+        })
       }
     }
   }
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (audioRef.current && progressRef.current) {
+    if (audioRef.current && progressRef.current && duration > 0) {
       const rect = progressRef.current.getBoundingClientRect()
       const clickX = e.clientX - rect.left
-      const percentage = clickX / rect.width
+      const percentage = Math.max(0, Math.min(1, clickX / rect.width))
       const newTime = percentage * duration
       audioRef.current.currentTime = newTime
       setCurrentTime(newTime)
     }
   }
+
+  const handlePlaybackSpeedChange = () => {
+    const newRate = playbackRate === 1 ? 1.5 : 1
+    setPlaybackRate(newRate)
+    if (audioRef.current) {
+      audioRef.current.playbackRate = newRate
+    }
+  }
+
+  // Update playback rate when it changes
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = playbackRate
+    }
+  }, [playbackRate])
 
   const startRecording = async () => {
     try {
@@ -327,7 +361,7 @@ export function AudioRecorder({
     return (
       <div className="w-full max-w-md">
         <div className="p-3 sm:p-4 border border-gray-300 rounded-lg bg-white space-y-3">
-          {/* Top row: Play/Pause button + "Recorded" text + Delete icon */}
+          {/* Top row: Play/Pause button + "Recorded" text + Playback speed + Delete icon */}
           <div className="flex items-center justify-between">
             {/* Left side: Play/Pause button + "Recorded" text */}
             <div className="flex items-center gap-3">
@@ -361,33 +395,54 @@ export function AudioRecorder({
               <span className="text-sm sm:text-base text-gray-600">Recorded</span>
             </div>
             
-            {/* Right side: Delete icon */}
-            <button
-              onClick={handleDiscard}
-              className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-red-50 transition-colors"
-              aria-label="Delete recording"
-            >
-              <svg
-                className="w-5 h-5 text-gray-700 hover:text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            {/* Right side: Playback speed + Delete icon */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePlaybackSpeedChange}
+                className="px-2 py-1 text-xs sm:text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                aria-label={`Playback speed: ${playbackRate}x`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-            </button>
+                {playbackRate}x
+              </button>
+              <button
+                onClick={handleDiscard}
+                className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-red-50 transition-colors"
+                aria-label="Delete recording"
+              >
+                <svg
+                  className="w-5 h-5 text-gray-700 hover:text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
           
-          {/* Progress bar */}
+          {/* Progress bar - clickable to scrub */}
           <div
             ref={progressRef}
             onClick={handleProgressClick}
-            className="w-full h-2 bg-gray-200 rounded-full cursor-pointer relative"
+            onMouseDown={(e) => {
+              if (progressRef.current && duration > 0) {
+                const rect = progressRef.current.getBoundingClientRect()
+                const clickX = e.clientX - rect.left
+                const percentage = Math.max(0, Math.min(1, clickX / rect.width))
+                const newTime = percentage * duration
+                if (audioRef.current) {
+                  audioRef.current.currentTime = newTime
+                  setCurrentTime(newTime)
+                }
+              }
+            }}
+            className="w-full h-2 bg-gray-200 rounded-full cursor-pointer relative touch-manipulation"
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={duration}
@@ -400,12 +455,10 @@ export function AudioRecorder({
           </div>
           
           {/* Time display */}
-          {duration > 0 && (
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>{formatTime(Math.floor(currentTime))}</span>
-              <span>{formatTime(Math.floor(duration))}</span>
-            </div>
-          )}
+          <div className="flex justify-between text-xs text-gray-500">
+            <span>{formatTime(Math.floor(currentTime))}</span>
+            <span>{duration > 0 ? formatTime(Math.floor(duration)) : '--:--'}</span>
+          </div>
         </div>
       </div>
     )

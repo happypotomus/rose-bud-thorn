@@ -324,19 +324,15 @@ export default function ReflectionPage() {
         {/* Rose, Bud, Thorn steps - new clean layout */}
         {(currentStep === 'rose' || currentStep === 'bud' || currentStep === 'thorn') && (
           <div className="text-center space-y-6 sm:space-y-8">
-            {/* Step icon - different for each step */}
+            {/* Step icon - different for each step (no border) */}
             <div className="flex justify-center">
-              <div className="relative">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-rose-200 flex items-center justify-center bg-white">
-                  {currentStep === 'rose' ? (
-                    <FlowerLogo size={48} className="sm:w-14 sm:h-14" />
-                  ) : currentStep === 'bud' ? (
-                    <span className="text-4xl sm:text-5xl">🌱</span>
-                  ) : (
-                    <span className="text-4xl sm:text-5xl">🌵</span>
-                  )}
-                </div>
-              </div>
+              {currentStep === 'rose' ? (
+                <FlowerLogo size={64} className="sm:w-20 sm:h-20" />
+              ) : currentStep === 'bud' ? (
+                <span className="text-5xl sm:text-6xl md:text-7xl">🌱</span>
+              ) : (
+                <span className="text-5xl sm:text-6xl md:text-7xl">🌵</span>
+              )}
             </div>
 
             {/* Step title in pink */}
