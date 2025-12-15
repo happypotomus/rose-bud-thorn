@@ -76,6 +76,22 @@ export default function ReflectionPage() {
             return
           }
           
+          // Check if user has already submitted a reflection for this week
+          const { data: existingReflection } = await supabase
+            .from('reflections')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('week_id', week.id)
+            .eq('circle_id', membership.circle_id)
+            .not('submitted_at', 'is', null)
+            .maybeSingle()
+          
+          if (existingReflection) {
+            // User has already submitted - redirect to home
+            router.push('/home')
+            return
+          }
+          
           // Load draft from localStorage
           const draftKey = `reflection_draft_${week.id}`
           const savedDraft = localStorage.getItem(draftKey)

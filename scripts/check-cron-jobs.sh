@@ -71,3 +71,5 @@ echo "      - Schedule: 0 3 * * 2"
 echo "      - Command: SELECT net.http_post(...)"
 echo ""
 echo "📝 See CHUNK_10_TESTING.md for detailed setup instructions"
+
+

@@ -110,3 +110,5 @@ WHERE command LIKE '%sunday-reminder%'
 --   Note: This requires the pg_net extension to make HTTP calls
 -- 
 -- ============================================================
+
+

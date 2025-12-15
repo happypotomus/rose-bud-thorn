@@ -28,3 +28,5 @@ export async function updateCircleInviteLink(
     .update({ invite_link: inviteLink })
     .eq('id', circleId)
 }
+
+

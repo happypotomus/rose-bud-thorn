@@ -28,3 +28,5 @@ ORDER BY extname;
 -- If you get a permission error, you may need to:
 -- 1. Check your Supabase plan (pg_cron may require Pro plan or higher)
 -- 2. Enable it via Dashboard → Database → Extensions instead of SQL
+
+

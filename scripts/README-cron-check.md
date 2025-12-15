@@ -35,3 +35,5 @@ Cron jobs must be configured in the Supabase Dashboard (they can't be set up via
 - PST = UTC-8 (Pacific Standard Time)
 - PDT = UTC-7 (Pacific Daylight Time, during summer)
 - All cron schedules in Supabase use UTC
+
+
