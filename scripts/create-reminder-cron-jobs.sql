@@ -28,7 +28,7 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 DECLARE
-  service_key TEXT := 'YOUR_SERVICE_ROLE_KEY';  -- ⚠️ REPLACE THIS WITH YOUR ACTUAL KEY!
+  service_key TEXT := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndpbGRnbmtwbWFseHZhZGxtamJqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzY5ODYwMSwiZXhwIjoyMDc5Mjc0NjAxfQ.3HYbb3Bi911pcSq93FlLQYfjTEB-OL9pwd6zQHJaL_8';  -- ⚠️ REPLACE THIS WITH YOUR ACTUAL KEY!
   project_url TEXT := 'https://wildgnkpmalxvadlmjbj.supabase.co';
 BEGIN
   PERFORM net.http_post(
@@ -49,7 +49,7 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 DECLARE
-  service_key TEXT := 'sb_secret_FE23zAjUG6zRiF9--6auZA_a8GnyyTE';  -- ⚠️ REPLACE THIS WITH YOUR ACTUAL KEY!
+  service_key TEXT := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndpbGRnbmtwbWFseHZhZGxtamJqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzY5ODYwMSwiZXhwIjoyMDc5Mjc0NjAxfQ.3HYbb3Bi911pcSq93FlLQYfjTEB-OL9pwd6zQHJaL_8';  -- ⚠️ REPLACE THIS WITH YOUR ACTUAL KEY!
   project_url TEXT := 'https://wildgnkpmalxvadlmjbj.supabase.co';
 BEGIN
   PERFORM net.http_post(

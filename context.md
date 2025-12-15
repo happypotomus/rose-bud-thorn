@@ -16,7 +16,7 @@ This file summarizes the key decisions and implementation details so future work
 - **Deployment**:  
   - Local dev: `npm run dev` → `http://localhost:3000`  
   - Hosted: Vercel (project connected to GitHub repo `happypotomus/rose-bud-thorn`)  
-- **Source of truth**: `rose_bud_thorn_full_spec.md` (do not diverge from this for v1 behavior)
+
 
 ---
 
@@ -151,16 +151,17 @@ File: `app/home/page.tsx`
 
 ### 5.3 Reflection Wizard
 
-File: `app/reflection/page.tsx`
+Files:
+- `app/reflection/page.tsx` (server component) - Checks access before rendering
+- `app/reflection/reflection-form.tsx` (client component) - Form UI logic
 
-- Client-only, 3-step + review flow: **Rose → Bud → Thorn → Review → Submit**.  
+- **Server-side checks**: Page component checks on server before rendering:
+  - Authentication
+  - Mid-week join status (redirects to `/home` if joined mid-week)
+  - Already submitted reflection (redirects to `/home` if already submitted)
+  - **Result**: Instant redirects, no flash/delay
+- Client component: 3-step + review flow: **Rose → Bud → Thorn → Review → Submit**.  
 - Draft is stored in React state and persisted to `localStorage` as `reflection_draft_${weekId}`.  
-- On mount:
-  - Loads `currentWeek` via `getCurrentWeekClient`.  
-  - Gets current user and circle membership (including `created_at`).  
-  - **Checks if user joined mid-week** (compares `circle_members.created_at` with `weeks.start_at`).  
-  - If joined mid-week, redirects to `/home` (prevents submission for current week).  
-  - Loads any existing draft from `localStorage`.  
 - On submit:
   - Inserts into `reflections` (rose/bud/thorn text, `submitted_at`).  
   - Clears draft from `localStorage`.  
@@ -355,10 +356,10 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
     - Reading UI with audio player and "View Transcribed Version" toggle
     - Transcript display with error handling
     - Export reflection feature (`app/home/export-reflection.tsx`)
-      - Copy to clipboard
-      - Download as text (.txt)
-      - Download as Markdown (.md)
+      - Single "Copy Reflection to Clipboard" button
+      - Shows "Transcribing..." indicator when transcripts are pending
       - Combines text + transcripts (prefers text, falls back to cleaned transcript)
+      - Helpful message in exported text when transcription is in progress
     - **Bug fix:** Export reflection data serialization
       - Explicitly maps reflection data when passing from server to client component
       - Converts empty strings to `null` for proper handling (empty strings come from audio-only submissions)
@@ -417,7 +418,9 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
 - Audio recorder state management: Fixed audio persisting across reflection steps (rose/bud/thorn) - now properly resets per section
 - Navigation buttons: Updated to always display on same line with 50/50 split (Back/Next buttons)
 - Review page: Added emoji icons (🌹 Rose, 🌱 Bud, 🌵 Thorn) to section headings
-- Export feature: Enhanced to show "Audio response" for audio-only submissions instead of "(No response)"
+- Export feature: Simplified to single "Copy Reflection to Clipboard" button (removed dropdown and download options)
+- Export feature: Added "Transcribing..." visual indicator when transcripts are pending
+- Reflection page: Server-side redirect for instant redirect when already submitted (no 2-3 second delay)
 
 **Mobile UX Improvements (Post-Chunk 13):**
 - Applied mobile-first responsive design across reflection wizard and review reflections section
@@ -440,6 +443,10 @@ These utilities will be reused for reminder + unlock SMS in later chunks.
 - Reflection page blocks access for mid-week joiners (redirects to home)
 - Reminder SMS (Sunday/Monday) excludes mid-week joiners
 - **Scenario handled:** User joins Wednesday, everyone else finished Monday → new user sees message, can't submit, doesn't block unlock
+
+**Reflection Access Control (Post-Chunk 13):**
+- Prevents resubmission: Users who already submitted for the current week are redirected to home
+- Server-side checks: Instant redirect (no delay) via server component wrapper
 
 **Remaining Work:**
 - Final polish and QA
