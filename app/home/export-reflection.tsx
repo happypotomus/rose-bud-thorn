@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { formatReflectionAsText, formatReflectionAsMarkdown, copyToClipboard, downloadAsFile, type ReflectionData } from '@/lib/utils/export-reflection'
+import { formatReflectionAsText, formatReflectionAsMarkdown, copyToClipboard, downloadAsFile, type ReflectionData, hasPendingTranscripts } from '@/lib/utils/export-reflection'
 
 type ExportReflectionProps = {
   reflection: ReflectionData
@@ -12,6 +12,7 @@ type ExportReflectionProps = {
 export function ExportReflection({ reflection, weekStartDate, weekEndDate }: ExportReflectionProps) {
   const [showDropdown, setShowDropdown] = useState(false)
   const [copied, setCopied] = useState(false)
+  const hasPending = hasPendingTranscripts(reflection)
 
   const handleCopy = async () => {
     // Debug: log reflection data to see what we're working with
@@ -75,7 +76,12 @@ export function ExportReflection({ reflection, weekStartDate, weekEndDate }: Exp
           />
           
           {/* Dropdown menu */}
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-20">
+          <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg border border-gray-200 z-20">
+            {hasPending && (
+              <div className="px-4 py-2 bg-yellow-50 border-b border-yellow-200 text-xs text-yellow-800">
+                ⚠️ Transcription in progress. Refresh the page to see transcripts when ready.
+              </div>
+            )}
             <div className="py-1">
               <button
                 onClick={handleCopy}

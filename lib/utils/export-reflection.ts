@@ -16,8 +16,33 @@ export type ReflectionData = {
 }
 
 /**
+ * Checks if transcription is still pending (audio exists but transcript doesn't)
+ * @returns true if any section has audio but no transcript
+ */
+export function hasPendingTranscripts(reflection: ReflectionData): boolean {
+  const hasContent = (str: string | null | undefined): boolean => {
+    return str != null && typeof str === 'string' && str.trim().length > 0
+  }
+  
+  // Check if any section has audio but no text and no transcript
+  const rosePending = hasContent(reflection.rose_audio_url) && 
+                      !hasContent(reflection.rose_text) && 
+                      !hasContent(reflection.rose_transcript)
+  
+  const budPending = hasContent(reflection.bud_audio_url) && 
+                     !hasContent(reflection.bud_text) && 
+                     !hasContent(reflection.bud_transcript)
+  
+  const thornPending = hasContent(reflection.thorn_audio_url) && 
+                       !hasContent(reflection.thorn_text) && 
+                       !hasContent(reflection.thorn_transcript)
+  
+  return rosePending || budPending || thornPending
+}
+
+/**
  * Gets the display content for a section
- * Priority: user-typed text > GPT transcript > "Audio response" (if audio exists) > empty
+ * Priority: user-typed text > GPT transcript > helpful message (if audio exists) > empty
  * For export: we want the actual content, not just "Audio response"
  */
 function getSectionContent(text: string | null, transcript: string | null, audioUrl?: string | null): string {
@@ -37,10 +62,10 @@ function getSectionContent(text: string | null, transcript: string | null, audio
     return (transcript as string).trim()
   }
   
-  // Priority 3: If audio exists but no text/transcript available yet, indicate audio response
-  // This should only happen if transcription hasn't completed or failed
+  // Priority 3: If audio exists but no text/transcript available yet, show helpful message
+  // This happens if transcription hasn't completed yet or failed
   if (hasContent(audioUrl)) {
-    return 'Audio response'
+    return '[Audio response - Transcription in progress. Please refresh the page to see the transcript once it\'s ready.]'
   }
   
   // Priority 4: No content at all
