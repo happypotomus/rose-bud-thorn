@@ -5,6 +5,7 @@ import { isCircleUnlocked } from '@/lib/supabase/unlock'
 import { didUserJoinMidWeek, getNextWeekStart } from '@/lib/supabase/midweek-join'
 import { ReadingStatus } from './reading-status'
 import { ExportReflection } from './export-reflection'
+import { MemberStatus } from './member-status'
 import { FlowerLogo } from '@/components/flower-logo'
 
 export default async function HomePage() {
@@ -107,6 +108,46 @@ export default async function HomePage() {
   // Check if circle is unlocked using real unlock logic
   const isUnlocked = await isCircleUnlocked(circleId, currentWeek.id)
 
+  // Get all circle members for status display
+  const { data: allMembers } = await supabase
+    .from('circle_members')
+    .select('user_id, created_at')
+    .eq('circle_id', circleId)
+
+  // Get all profiles for circle members
+  const memberUserIds = allMembers?.map(m => m.user_id) || []
+  const { data: memberProfiles } = await supabase
+    .from('profiles')
+    .select('id, first_name')
+    .in('id', memberUserIds)
+
+  // Get all submitted reflections for current week
+  const { data: submittedReflections } = await supabase
+    .from('reflections')
+    .select('user_id')
+    .eq('circle_id', circleId)
+    .eq('week_id', currentWeek.id)
+    .not('submitted_at', 'is', null)
+
+  // Create set of user IDs who have submitted
+  const submittedUserIds = new Set(
+    submittedReflections?.map(r => r.user_id) || []
+  )
+
+  // Build member status list (exclude mid-week joiners from status display)
+  const weekStart = new Date(currentWeek.start_at)
+  const memberStatus = (allMembers || [])
+    .filter(m => new Date(m.created_at) <= weekStart) // Only show pre-week members
+    .map(member => {
+      const profile = memberProfiles?.find(p => p.id === member.user_id)
+      return {
+        userId: member.user_id,
+        firstName: profile?.first_name || 'Unknown',
+        hasCompleted: submittedUserIds.has(member.user_id),
+      }
+    })
+    .sort((a, b) => a.firstName.localeCompare(b.firstName)) // Sort alphabetically
+
   // Check if user has read all reflections (client-side check via localStorage)
   // We'll check this on the client side since localStorage is client-only
   const hasReadReflections = false // Will be checked client-side
@@ -188,6 +229,11 @@ export default async function HomePage() {
             <p className="text-base sm:text-lg text-gray-600">
               Take a moment to reflect on your week.
             </p>
+            {memberStatus.length > 0 && (
+              <div className="pt-2 sm:pt-4">
+                <MemberStatus members={memberStatus} />
+              </div>
+            )}
             <div className="pt-2 sm:pt-4">
               <a
                 href="/reflection"
@@ -212,6 +258,11 @@ export default async function HomePage() {
                 <p className="text-sm sm:text-base text-gray-500">
                   We'll text you when everyone is done.
                 </p>
+                {memberStatus.length > 0 && (
+                  <div className="pt-2 sm:pt-4">
+                    <MemberStatus members={memberStatus} />
+                  </div>
+                )}
                 <div className="pt-2 sm:pt-4">
                   <ExportReflection 
                     reflection={reflectionData}
