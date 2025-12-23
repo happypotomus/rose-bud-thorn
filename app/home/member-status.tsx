@@ -18,11 +18,11 @@ export function MemberStatus({ members }: MemberStatusProps) {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full max-w-md mx-auto text-center">
       <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4">
         Circle Status
       </h2>
-      <div className="space-y-2 sm:space-y-2.5">
+      <div className="space-y-2 sm:space-y-2.5 flex flex-col items-center">
         {members.map((member) => (
           <div
             key={member.userId}

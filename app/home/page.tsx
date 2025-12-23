@@ -229,11 +229,6 @@ export default async function HomePage() {
             <p className="text-base sm:text-lg text-gray-600">
               Take a moment to reflect on your week.
             </p>
-            {memberStatus.length > 0 && (
-              <div className="pt-2 sm:pt-4">
-                <MemberStatus members={memberStatus} />
-              </div>
-            )}
             <div className="pt-2 sm:pt-4">
               <a
                 href="/reflection"
@@ -242,6 +237,11 @@ export default async function HomePage() {
                 Start Reflection
               </a>
             </div>
+            {memberStatus.length > 0 && (
+              <div className="pt-2 sm:pt-4">
+                <MemberStatus members={memberStatus} />
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -258,11 +258,6 @@ export default async function HomePage() {
                 <p className="text-sm sm:text-base text-gray-500">
                   We'll text you when everyone is done.
                 </p>
-                {memberStatus.length > 0 && (
-                  <div className="pt-2 sm:pt-4">
-                    <MemberStatus members={memberStatus} />
-                  </div>
-                )}
                 <div className="pt-2 sm:pt-4">
                   <ExportReflection 
                     reflection={reflectionData}
@@ -270,6 +265,11 @@ export default async function HomePage() {
                     weekEndDate={new Date(currentWeek.end_at)}
                   />
                 </div>
+                {memberStatus.length > 0 && (
+                  <div className="pt-2 sm:pt-4">
+                    <MemberStatus members={memberStatus} />
+                  </div>
+                )}
               </div>
             )}
 
