@@ -7,6 +7,8 @@ import { ReadingStatus } from './reading-status'
 import { ExportReflection } from './export-reflection'
 import { MemberStatus } from './member-status'
 import { FlowerLogo } from '@/components/flower-logo'
+import { Rewind } from 'lucide-react'
+import Link from 'next/link'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -199,7 +201,16 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 md:p-24 pt-safe pb-safe">
+    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 md:p-24 pt-safe pb-safe relative">
+      {/* Review Reflections Button */}
+      <Link 
+        href="/review"
+        className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+      >
+        <Rewind className="w-4 h-4 sm:w-5 sm:h-5" />
+        <span className="text-sm sm:text-base font-medium">Review Reflections</span>
+      </Link>
+      
       <div className="text-center w-full max-w-2xl">
         {/* State: Mid-week joiner */}
         {homeState === 'midweek_joiner' && nextWeekStart ? (
