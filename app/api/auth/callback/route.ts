@@ -45,17 +45,22 @@ export async function POST(request: NextRequest) {
     // Check if user already has a profile
     const { data: existingProfile } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, sms_consent_at')
       .eq('id', userId)
       .single()
 
     // Create or update profile
+    // Set SMS consent timestamp when user signs up (implicit consent by providing phone)
+    const now = new Date().toISOString()
+    
     if (existingProfile) {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
           first_name: firstName,
           phone: phone,
+          // Only set consent if not already set (preserve existing consent)
+          sms_consent_at: existingProfile.sms_consent_at || now,
         })
         .eq('id', userId)
 
@@ -80,6 +85,7 @@ export async function POST(request: NextRequest) {
           id: userId,
           first_name: firstName,
           phone: phone,
+          sms_consent_at: now, // Set consent timestamp for new users
         })
 
       if (insertError) {

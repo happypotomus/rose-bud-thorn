@@ -298,6 +298,13 @@ export default function InviteForm() {
             </p>
           </div>
 
+          {/* SMS Consent Notice */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
+            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+              By providing your phone number and completing signup, you agree to receive weekly reminder text messages for your reflection circle. You can opt-out at any time by contacting us or replying STOP to any message.
+            </p>
+          </div>
+
           {error && (
             <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
               {error}

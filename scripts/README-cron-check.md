@@ -37,3 +37,6 @@ Cron jobs must be configured in the Supabase Dashboard (they can't be set up via
 - All cron schedules in Supabase use UTC
 
 
+
+
+

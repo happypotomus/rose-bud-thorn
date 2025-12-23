@@ -42,3 +42,6 @@ SET invite_link = generate_invite_link(invite_token)
 WHERE invite_token IS NOT NULL AND (invite_link IS NULL OR invite_link = '');
 
 
+
+
+
