@@ -32,6 +32,13 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
 
       // Get all user's reflections for past weeks
       const weekIds = pastWeeks.map(w => w.id)
+      
+      if (weekIds.length === 0) {
+        alert('No past weeks found.')
+        setDownloading(false)
+        return
+      }
+
       const { data: reflections, error } = await supabase
         .from('reflections')
         .select(`
@@ -54,11 +61,20 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
         .not('submitted_at', 'is', null)
         .order('submitted_at', { ascending: false })
 
-      if (error || !reflections || reflections.length === 0) {
+      if (error) {
+        console.error('Error fetching reflections:', error)
+        alert('Error fetching reflections. Please try again.')
+        setDownloading(false)
+        return
+      }
+
+      if (!reflections || reflections.length === 0) {
         alert('No reflections found to download.')
         setDownloading(false)
         return
       }
+
+      console.log(`Found ${reflections.length} reflections for ${weekIds.length} weeks`)
 
       // Create a map of week_id -> week data for quick lookup
       const weekMap = new Map(pastWeeks.map(w => [w.id, w]))
@@ -69,6 +85,12 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
 
       for (const reflection of reflections) {
         const week = weekMap.get(reflection.week_id)
+        
+        if (!week) {
+          console.warn(`Week not found for reflection ${reflection.id}, week_id: ${reflection.week_id}`)
+          continue
+        }
+
         const reflectionData: ReflectionData = {
           rose_text: reflection.rose_text,
           bud_text: reflection.bud_text,
@@ -84,13 +106,15 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
 
         const formatted = formatReflectionAsText(
           reflectionData,
-          week ? new Date(week.start_at) : undefined,
-          week ? new Date(week.end_at) : undefined
+          new Date(week.start_at),
+          new Date(week.end_at)
         )
 
         allReflectionsText += formatted + '\n\n'
         allReflectionsText += '='.repeat(50) + '\n\n'
       }
+
+      console.log(`Formatted ${reflections.length} reflections, text length: ${allReflectionsText.length}`)
 
       // Generate filename with current date
       const today = new Date()
