@@ -81,6 +81,14 @@ export async function sendSMS(to: string, message: string): Promise<string> {
       phone: normalizedPhone,
       originalPhone: to,
     })
+    
+    // Preserve opt-out error code for handling upstream
+    if (error.code === 21610) {
+      const optOutError = new Error(`User has opted out: ${error.message}`)
+      ;(optOutError as any).code = 21610
+      throw optOutError
+    }
+    
     throw new Error(`Failed to send SMS: ${error.message}`)
   }
 }

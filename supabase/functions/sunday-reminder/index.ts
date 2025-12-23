@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
       const userIds = preWeekMembers.map(m => m.user_id)
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, first_name, phone')
+        .select('id, first_name, phone, sms_opted_out_at')
         .in('id', userIds)
 
       if (profilesError) {
@@ -133,8 +133,14 @@ Deno.serve(async (req) => {
         continue
       }
 
-      // Send SMS to each member
+      // Send SMS to each member (skip opted-out users)
       for (const profile of profiles) {
+        // Skip users who have opted out
+        if (profile.sms_opted_out_at) {
+          console.log(`Skipping SMS to ${profile.phone} - user opted out at ${profile.sms_opted_out_at}`)
+          continue
+        }
+
         try {
           // Personalize message with link to reflection page
           const firstName = profile.first_name || 'there'
@@ -160,6 +166,20 @@ Deno.serve(async (req) => {
 
           if (!smsResponse.ok) {
             const errorText = await smsResponse.text()
+            const errorData = JSON.parse(errorText)
+            
+            // Check if user opted out (Twilio error code 21610)
+            if (smsResponse.status === 400 && errorData.code === 21610) {
+              // User has opted out - mark in database
+              await supabase
+                .from('profiles')
+                .update({ sms_opted_out_at: new Date().toISOString() })
+                .eq('id', profile.id)
+              
+              console.log(`User ${profile.id} (${profile.phone}) has opted out - marked in database`)
+              continue // Skip this user
+            }
+            
             throw new Error(`Twilio API error: ${smsResponse.status} ${errorText}`)
           }
 

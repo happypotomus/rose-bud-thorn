@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
       // Get profiles for non-submitters
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, first_name, phone')
+        .select('id, first_name, phone, sms_opted_out_at')
         .in('id', nonSubmitters)
 
       if (profilesError) {
@@ -148,8 +148,14 @@ Deno.serve(async (req) => {
         continue
       }
 
-      // Send reminder SMS to each non-submitter
+      // Send reminder SMS to each non-submitter (skip opted-out users)
       for (const profile of profiles) {
+        // Skip users who have opted out
+        if (profile.sms_opted_out_at) {
+          console.log(`Skipping SMS to ${profile.phone} - user opted out at ${profile.sms_opted_out_at}`)
+          continue
+        }
+
         try {
           const reflectionUrl = `${appBaseUrl}/reflection`
           const message = `Gentle reminder to complete your weekly reflection. ${reflectionUrl}`

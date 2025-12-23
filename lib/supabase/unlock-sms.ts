@@ -49,7 +49,7 @@ export async function sendUnlockSMS(
   const userIds = members.map(m => m.user_id)
   const { data: profiles, error: profilesError } = await supabase
     .from('profiles')
-    .select('id, phone')
+    .select('id, phone, sms_opted_out_at')
     .in('id', userIds)
 
   if (profilesError || !profiles || profiles.length === 0) {
@@ -69,9 +69,9 @@ export async function sendUnlockSMS(
     existingLogs?.map(log => log.user_id) || []
   )
 
-  // Filter out users who have already received the SMS
+  // Filter out users who have already received the SMS or opted out
   const profilesToNotify = profiles.filter(
-    profile => !usersWhoReceivedSMS.has(profile.id)
+    profile => !usersWhoReceivedSMS.has(profile.id) && !profile.sms_opted_out_at
   )
 
   if (profilesToNotify.length === 0) {
@@ -93,6 +93,12 @@ export async function sendUnlockSMS(
   const results: any[] = []
 
   for (const profile of profilesToNotify) {
+    // Skip if user opted out (double-check, though we already filtered)
+    if (profile.sms_opted_out_at) {
+      console.log(`Skipping unlock SMS to ${profile.phone} - user opted out`)
+      continue
+    }
+
     try {
       // Send SMS (phone number will be normalized inside sendSMS)
       const messageSid = await sendSMS(profile.phone, message)
@@ -121,7 +127,19 @@ export async function sendUnlockSMS(
       })
 
       sent++
-    } catch (error) {
+    } catch (error: any) {
+      // Check if user opted out (Twilio error code 21610)
+      if (error.code === 21610 || error.message?.includes('opted out') || error.message?.includes('unsubscribed')) {
+        // User has opted out - mark in database
+        await supabase
+          .from('profiles')
+          .update({ sms_opted_out_at: new Date().toISOString() })
+          .eq('id', profile.id)
+        
+        console.log(`User ${profile.id} (${profile.phone}) has opted out - marked in database`)
+        continue // Skip this user
+      }
+
       console.error(`Error sending unlock SMS to ${profile.phone}:`, error)
       errors++
       results.push({
