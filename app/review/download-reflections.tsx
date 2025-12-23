@@ -90,13 +90,6 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
 
       const reflections = allReflections
 
-      if (error) {
-        console.error('Error fetching reflections:', error)
-        alert('Error fetching reflections. Please try again.')
-        setDownloading(false)
-        return
-      }
-
       if (!reflections || reflections.length === 0) {
         alert('No reflections found to download.')
         setDownloading(false)
