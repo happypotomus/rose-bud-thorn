@@ -736,17 +736,27 @@ app/[page]/[component].tsx (Client Component)
 - User's reflection (if exists)
 - Unlock status
 - Mid-week join status
+- All circle members and their profiles
+- Submitted reflections for current week (for member status)
 
 **States Rendered**:
 1. Mid-week joiner → Special message
-2. No reflection → "Start Reflection" button
-3. Submitted, not unlocked → "Waiting" message
+2. No reflection → "Start Reflection" button + MemberStatus component
+3. Submitted, not unlocked → "Waiting" message + MemberStatus component
 4. Unlocked → ReadingStatus component
 
 **Key Functions Called**:
 - `getCurrentWeek()` → Week determination
 - `isCircleUnlocked()` → Unlock check
 - `didUserJoinMidWeek()` → Mid-week detection
+
+**Member Status Logic**:
+- Fetches all circle members with join timestamps
+- Fetches all submitted reflections for current week
+- Filters to pre-week members only (excludes mid-week joiners)
+- Maps members to completion status (has submitted reflection or not)
+- Sorts alphabetically by first name
+- Passes to `MemberStatus` component for display
 
 ---
 
@@ -818,6 +828,31 @@ app/[page]/[component].tsx (Client Component)
 - Used by `ReadingStatus` component on home page
 
 **Why Client Component?**: Needs localStorage, audio playback, interactive UI
+
+---
+
+#### `app/home/member-status.tsx`
+**Type**: Client Component
+
+**Purpose**: Display circle member completion status for current week
+
+**Props**:
+- `members`: Array of `{userId, firstName, hasCompleted}` objects
+
+**Display Logic**:
+- Shows all pre-week circle members (excludes mid-week joiners)
+- Green checkmark (✓) and green background for completed members
+- Grey X (✗) and grey background for incomplete members
+- Sorted alphabetically by first name
+- Responsive design with mobile-first breakpoints
+
+**Key Design Decisions**:
+- **Excludes mid-week joiners**: Consistent with unlock logic - they don't participate in current week
+- **Visual indicators**: Clear color coding (green = done, grey = pending)
+- **Alphabetical sorting**: Consistent display order regardless of submission order
+- **Client component**: Simple presentational component, data fetched server-side
+
+**Usage**: Displayed on home page in "no_reflection" and "waiting" states to show circle progress
 
 ---
 
