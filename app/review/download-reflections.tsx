@@ -21,12 +21,41 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
       console.log('[DOWNLOAD] User ID:', userId)
       console.log('[DOWNLOAD] Circle ID:', circleId)
 
-      // Get all past weeks
-      console.log('[DOWNLOAD] Step 1: Fetching all past weeks...')
-      const { data: allPastWeeks, error: weeksError } = await supabase
+      // NEW APPROACH: First, get all reflections for this user in this circle
+      // Then get the weeks for those reflections, and filter to unlocked weeks
+      console.log('[DOWNLOAD] Step 1: Fetching all user reflections...')
+      const { data: allUserReflections, error: reflectionsError } = await supabase
+        .from('reflections')
+        .select('id, week_id, submitted_at')
+        .eq('user_id', userId)
+        .eq('circle_id', circleId)
+        .not('submitted_at', 'is', null)
+        .order('submitted_at', { ascending: false })
+
+      if (reflectionsError) {
+        console.error('[DOWNLOAD] Error fetching user reflections:', reflectionsError)
+        alert('Error fetching reflections. Please try again.')
+        setDownloading(false)
+        return
+      }
+
+      if (!allUserReflections || allUserReflections.length === 0) {
+        console.log('[DOWNLOAD] No reflections found for user')
+        alert('No reflections found to download.')
+        setDownloading(false)
+        return
+      }
+
+      console.log(`[DOWNLOAD] Found ${allUserReflections.length} reflection(s) for user`)
+      const uniqueWeekIds = [...new Set(allUserReflections.map(r => r.week_id))]
+      console.log(`[DOWNLOAD] Unique week IDs with reflections: ${uniqueWeekIds.length}`, uniqueWeekIds)
+
+      // Get week details for all weeks where user has reflections
+      console.log('[DOWNLOAD] Step 2: Fetching week details...')
+      const { data: weeks, error: weeksError } = await supabase
         .from('weeks')
         .select('id, start_at, end_at')
-        .lt('end_at', new Date().toISOString())
+        .in('id', uniqueWeekIds)
         .order('start_at', { ascending: false })
 
       if (weeksError) {
@@ -36,29 +65,24 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
         return
       }
 
-      if (!allPastWeeks || allPastWeeks.length === 0) {
-        console.log('[DOWNLOAD] No past weeks found')
-        alert('No past reflections found.')
+      if (!weeks || weeks.length === 0) {
+        console.log('[DOWNLOAD] No weeks found for reflections')
+        alert('No weeks found for reflections.')
         setDownloading(false)
         return
       }
 
-      console.log(`[DOWNLOAD] Found ${allPastWeeks.length} past weeks`)
-      console.log('[DOWNLOAD] Past week IDs:', allPastWeeks.map(w => w.id))
+      console.log(`[DOWNLOAD] Found ${weeks.length} week(s) with reflections`)
 
-      // Filter to only unlocked weeks (same logic as review page)
-      console.log('[DOWNLOAD] Step 2: Checking which weeks are unlocked...')
+      // Filter to only unlocked weeks
+      console.log('[DOWNLOAD] Step 3: Checking which weeks are unlocked...')
       const { isCircleUnlocked } = await import('@/lib/supabase/unlock')
       const unlockedWeeks = []
-      const unlockCheckResults: Array<{ weekId: string; unlocked: boolean; error?: string }> = []
       
-      for (let i = 0; i < allPastWeeks.length; i++) {
-        const week = allPastWeeks[i]
-        console.log(`[DOWNLOAD] Checking unlock for week ${i + 1}/${allPastWeeks.length}: ${week.id} (${new Date(week.start_at).toLocaleDateString()})`)
-        
+      for (const week of weeks) {
+        console.log(`[DOWNLOAD] Checking unlock for week ${week.id} (${new Date(week.start_at).toLocaleDateString()})...`)
         try {
           const unlocked = await isCircleUnlocked(circleId, week.id, supabase)
-          unlockCheckResults.push({ weekId: week.id, unlocked })
           console.log(`[DOWNLOAD] Week ${week.id}: ${unlocked ? 'UNLOCKED' : 'locked'}`)
           
           if (unlocked) {
@@ -67,12 +91,10 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : 'Unknown error'
           console.error(`[DOWNLOAD] Error checking unlock for week ${week.id}:`, errorMsg)
-          unlockCheckResults.push({ weekId: week.id, unlocked: false, error: errorMsg })
         }
       }
 
-      console.log(`[DOWNLOAD] Unlock check complete: ${unlockedWeeks.length} unlocked out of ${allPastWeeks.length} total weeks`)
-      console.log('[DOWNLOAD] Unlock results:', unlockCheckResults)
+      console.log(`[DOWNLOAD] Unlock check complete: ${unlockedWeeks.length} unlocked out of ${weeks.length} weeks with reflections`)
       console.log('[DOWNLOAD] Unlocked week IDs:', unlockedWeeks.map(w => w.id))
 
       if (unlockedWeeks.length === 0) {
@@ -82,71 +104,18 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
         return
       }
 
-      // Get all user's reflections for unlocked weeks only
+      // Get week IDs for unlocked weeks
       const weekIds = unlockedWeeks.map(w => w.id)
       
-      console.log(`[DOWNLOAD] Step 3: Fetching reflections for ${weekIds.length} unlocked weeks...`)
+      console.log(`[DOWNLOAD] Step 4: Fetching full reflection data for ${weekIds.length} unlocked weeks...`)
       console.log('[DOWNLOAD] Week IDs to query:', weekIds)
       
-      // Check if user has reflections for these weeks - query each week individually to debug
-      console.log('[DOWNLOAD] Checking reflections per week individually...')
-      const reflectionsPerWeek: Map<string, any[]> = new Map()
-      
-      for (const weekId of weekIds) {
-        const { data: weekReflections, error: weekError } = await supabase
-          .from('reflections')
-          .select('id, week_id, submitted_at')
-          .eq('user_id', userId)
-          .eq('circle_id', circleId)
-          .eq('week_id', weekId)
-          .not('submitted_at', 'is', null)
-        
-        if (weekError) {
-          console.error(`[DOWNLOAD] Error checking week ${weekId}:`, weekError)
-        } else {
-          const count = weekReflections?.length || 0
-          console.log(`[DOWNLOAD] Week ${weekId}: Found ${count} reflection(s)`)
-          if (weekReflections && weekReflections.length > 0) {
-            reflectionsPerWeek.set(weekId, weekReflections)
-            console.log(`[DOWNLOAD] Week ${weekId} reflection details:`, weekReflections.map(r => ({ id: r.id, week_id: r.week_id, submitted_at: r.submitted_at })))
-          }
-        }
-      }
-      
-      console.log(`[DOWNLOAD] Total reflections found (per-week check): ${Array.from(reflectionsPerWeek.values()).flat().length}`)
-
       // Fetch all reflections - query each week individually (more reliable than .in())
-      // This matches the approach used in the review page
       console.log(`[DOWNLOAD] Fetching reflections for each week individually...`)
       let allReflections: any[] = []
 
       for (const weekId of weekIds) {
         console.log(`[DOWNLOAD] Fetching reflections for week ${weekId}...`)
-        console.log(`[DOWNLOAD] Query params: user_id=${userId}, circle_id=${circleId}, week_id=${weekId}`)
-        
-        // First, let's check what reflections exist for this week in this circle (any user)
-        const { data: allWeekReflections, error: allError } = await supabase
-          .from('reflections')
-          .select('id, user_id, week_id, circle_id, submitted_at')
-          .eq('circle_id', circleId)
-          .eq('week_id', weekId)
-          .not('submitted_at', 'is', null)
-        
-        if (allError) {
-          console.error(`[DOWNLOAD] Error fetching all reflections for week ${weekId}:`, allError)
-        } else {
-          console.log(`[DOWNLOAD] Week ${weekId}: Total reflections in circle: ${allWeekReflections?.length || 0}`)
-          if (allWeekReflections && allWeekReflections.length > 0) {
-            console.log(`[DOWNLOAD] Week ${weekId}: All reflection user_ids:`, allWeekReflections.map(r => r.user_id))
-            console.log(`[DOWNLOAD] Week ${weekId}: Looking for user_id: ${userId}`)
-            const userReflection = allWeekReflections.find(r => r.user_id === userId)
-            if (userReflection) {
-              console.log(`[DOWNLOAD] Week ${weekId}: Found user's reflection:`, userReflection)
-            } else {
-              console.log(`[DOWNLOAD] Week ${weekId}: User's reflection NOT found in results`)
-            }
-          }
-        }
         
         const { data: reflections, error } = await supabase
           .from('reflections')
