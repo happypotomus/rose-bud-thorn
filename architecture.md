@@ -745,6 +745,10 @@ app/[page]/[component].tsx (Client Component)
 3. Submitted, not unlocked → "Waiting" message + MemberStatus component
 4. Unlocked → ReadingStatus component
 
+**UI Elements**:
+- "Review Reflections" button in top right (grey, with Rewind icon)
+- Links to `/review` page for viewing past weeks
+
 **Key Functions Called**:
 - `getCurrentWeek()` → Week determination
 - `isCircleUnlocked()` → Unlock check
@@ -853,6 +857,88 @@ app/[page]/[component].tsx (Client Component)
 - **Client component**: Simple presentational component, data fetched server-side
 
 **Usage**: Displayed on home page in "no_reflection" and "waiting" states to show circle progress
+
+---
+
+#### `app/review/page.tsx`
+**Type**: Server Component
+
+**Purpose**: Week selection page for reviewing past reflections
+
+**Data Fetched**:
+- User's circle membership
+- All past weeks (end_at < NOW())
+- Unlock status for each week (via `isCircleUnlocked`)
+- Groups weeks by month
+
+**Display Logic**:
+- Shows months in descending order (most recent first)
+- Each month shows list of unlocked weeks
+- Each week displays date range (e.g., "Jan 5 - Jan 12")
+- Clicking a week navigates to `/review/[weekId]`
+- Shows "No past reflections" message if no unlocked weeks exist
+
+**Key Functions Called**:
+- `getPastUnlockedWeeks()` → Fetches and groups past unlocked weeks
+
+**Why Server Component?**: Data fetching happens server-side for better performance
+
+---
+
+#### `app/review/[weekId]/page.tsx`
+**Type**: Server Component
+
+**Purpose**: Week review page - fetches all data for a specific week
+
+**Data Fetched**:
+- Week details (validates week exists and is in the past)
+- All circle members
+- All reflections for that week and circle (including user's own)
+- All profiles for reflection authors
+- All comments for those reflections
+- Commenter profiles
+- Unlock status for that week
+
+**Validation**:
+- Checks week exists
+- Checks week is in the past (redirects if not)
+- Checks circle was unlocked for that week (redirects if not)
+
+**Data Transformation**:
+- Maps reflections with author names
+- Groups comments by reflection_id
+- Sorts reflections alphabetically by author name
+
+**Why Server Component?**: Efficient server-side data fetching and validation
+
+---
+
+#### `app/review/[weekId]/review-display.tsx`
+**Type**: Client Component
+
+**Purpose**: Display all reflections for a week in a scrollable list
+
+**Props**:
+- `weekId`, `weekStart`, `weekEnd`: Week information
+- `reflections`: Array of reflections with author names
+- `commentsByReflection`: Map of reflection_id → comments
+- `currentUserId`: To identify own reflection
+- `wasUnlocked`: Whether circle was unlocked for that week
+
+**Features**:
+- Scrollable list showing all reflections at once
+- Each reflection in a card with Rose/Bud/Thorn sections
+- Own reflection marked with "(You)" label
+- Audio playback and transcript toggles
+- CommentSection component below each reflection
+- "Copy Reflection to Clipboard" button only on own reflection
+- Real-time comment refresh after adding new comments
+
+**State Management**:
+- `commentsMap`: Local state for comments (updated when new comment added)
+- `showTranscripts`: Per-reflection transcript visibility state
+
+**Why Client Component?**: Needs interactivity (audio playback, comment submission, transcript toggles)
 
 ---
 
@@ -1113,6 +1199,29 @@ export async function POST(request: NextRequest) {
 
 ---
 
+#### `lib/supabase/review.ts`
+**Functions**:
+- `getPastUnlockedWeeks(circleId, supabaseClient)`
+- `formatWeekRange(startAt, endAt)`
+
+**Purpose**: Fetch and format past weeks for review feature
+
+**Logic** (`getPastUnlockedWeeks`):
+1. Fetches all past weeks (end_at < NOW())
+2. For each week, checks if circle was unlocked using `isCircleUnlocked`
+3. Filters to only unlocked weeks
+4. Groups by month using `start_at` timestamp
+5. Sorts months by most recent week first
+6. Returns array of month groups
+
+**Logic** (`formatWeekRange`):
+- Formats week date range for display (e.g., "Jan 5 - Jan 12")
+- Handles same-month and cross-month ranges
+
+**Usage**: Used by review page to display selectable past weeks
+
+---
+
 ### 8.2 Twilio Utilities
 
 #### `lib/twilio/sms.ts`
@@ -1172,6 +1281,28 @@ export async function POST(request: NextRequest) {
 **Function**: `generateInviteLink(token: string, baseUrl?: string)`
 
 **Purpose**: Generate full invite URL from token
+
+---
+
+#### `lib/supabase/review.ts`
+**Functions**:
+- `getPastUnlockedWeeks(circleId, supabaseClient): Promise<MonthGroup[]>`
+- `formatWeekRange(startAt, endAt): string`
+
+**Purpose**: Utility functions for review reflections feature
+
+**getPastUnlockedWeeks**:
+- Fetches all past weeks (end_at < NOW())
+- Checks unlock status for each week using `isCircleUnlocked`
+- Filters to only unlocked weeks
+- Groups by month (e.g., "January 2025")
+- Returns sorted array of month groups (most recent first)
+
+**formatWeekRange**:
+- Formats week date range for display
+- Handles same-month (e.g., "Jan 5 - 12") and cross-month (e.g., "Jan 30 - Feb 6") ranges
+
+**Usage**: Used by `/review` page to display selectable past weeks
 
 ---
 
