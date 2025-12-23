@@ -1,4 +1,3 @@
-import { createClient } from './server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 /**
@@ -8,15 +7,15 @@ import type { SupabaseClient } from '@supabase/supabase-js'
  * 
  * @param circleId - The circle ID to check
  * @param weekId - The week ID to check
- * @param supabaseClient - Optional Supabase client (if not provided, creates one with server client)
+ * @param supabaseClient - Required Supabase client (must be provided by caller)
  * @returns true if all pre-week members have submitted, false otherwise
  */
 export async function isCircleUnlocked(
   circleId: string,
   weekId: string,
-  supabaseClient?: SupabaseClient
+  supabaseClient: SupabaseClient
 ): Promise<boolean> {
-  const supabase = supabaseClient || await createClient()
+  const supabase = supabaseClient
 
   // Get the week's start_at to determine which members were present at week start
   const { data: week, error: weekError } = await supabase

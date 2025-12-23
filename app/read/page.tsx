@@ -173,7 +173,7 @@ export default function ReadPage() {
 
         setFriends(friendReflections)
 
-        // Check if circle is unlocked
+        // Check if circle is unlocked (pass client-side supabase client)
         const unlocked = await isCircleUnlocked(membership.circle_id, week.id, supabase)
         setIsUnlocked(unlocked)
 

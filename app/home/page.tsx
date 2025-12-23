@@ -106,7 +106,7 @@ export default async function HomePage() {
   }
 
   // Check if circle is unlocked using real unlock logic
-  const isUnlocked = await isCircleUnlocked(circleId, currentWeek.id)
+  const isUnlocked = await isCircleUnlocked(circleId, currentWeek.id, supabase)
 
   // Get all circle members for status display
   const { data: allMembers } = await supabase
