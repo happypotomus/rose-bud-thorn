@@ -5,9 +5,12 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getCurrentWeekClient } from '@/lib/supabase/week'
+import { isCircleUnlocked } from '@/lib/supabase/unlock'
+import { CommentSection } from './comment-section'
 import Link from 'next/link'
 
 type FriendReflection = {
+  reflection_id: string
   user_id: string
   first_name: string
   rose_text: string
@@ -21,6 +24,14 @@ type FriendReflection = {
   thorn_transcript: string | null
 }
 
+type Comment = {
+  id: string
+  user_id: string
+  comment_text: string
+  created_at: string
+  commenter_name: string
+}
+
 export default function ReadPage() {
   const router = useRouter()
   const supabase = createClient()
@@ -30,6 +41,9 @@ export default function ReadPage() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [weekId, setWeekId] = useState<string | null>(null)
   const [circleId, setCircleId] = useState<string | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [isUnlocked, setIsUnlocked] = useState(false)
+  const [commentsByReflection, setCommentsByReflection] = useState<Map<string, Comment[]>>(new Map())
   const [error, setError] = useState<string | null>(null)
   const [showTranscripts, setShowTranscripts] = useState<{
     rose: boolean
@@ -52,6 +66,8 @@ export default function ReadPage() {
           router.push('/invite')
           return
         }
+
+        setCurrentUserId(user.id)
 
         // Get current week
         const week = await getCurrentWeekClient(supabase)
@@ -97,6 +113,7 @@ export default function ReadPage() {
         const { data: reflections } = await supabase
           .from('reflections')
           .select(`
+            id,
             user_id,
             rose_text,
             bud_text,
@@ -139,6 +156,7 @@ export default function ReadPage() {
         // Transform and sort alphabetically by first name
         const friendReflections: FriendReflection[] = reflections
           .map((r: any) => ({
+            reflection_id: r.id,
             user_id: r.user_id,
             first_name: profileMap.get(r.user_id) || 'Friend',
             rose_text: r.rose_text || '',
@@ -154,6 +172,58 @@ export default function ReadPage() {
           .sort((a, b) => a.first_name.localeCompare(b.first_name))
 
         setFriends(friendReflections)
+
+        // Check if circle is unlocked
+        const unlocked = await isCircleUnlocked(membership.circle_id, week.id, supabase)
+        setIsUnlocked(unlocked)
+
+        // Fetch comments for all reflections
+        if (unlocked && reflections.length > 0) {
+          const reflectionIds = reflections.map((r: any) => r.id)
+          const { data: commentsData, error: commentsError } = await supabase
+            .from('comments')
+            .select(`
+              id,
+              reflection_id,
+              user_id,
+              comment_text,
+              created_at
+            `)
+            .in('reflection_id', reflectionIds)
+            .order('created_at', { ascending: true })
+
+          if (!commentsError && commentsData) {
+            // Get commenter profiles
+            const commenterIds = [...new Set(commentsData.map((c: any) => c.user_id))]
+            const { data: commenterProfiles } = await supabase
+              .from('profiles')
+              .select('id, first_name')
+              .in('id', commenterIds)
+
+            const commenterMap = new Map<string, string>()
+            if (commenterProfiles) {
+              commenterProfiles.forEach((p: any) => {
+                commenterMap.set(p.id, p.first_name || 'Friend')
+              })
+            }
+
+            // Group comments by reflection_id
+            const commentsMap = new Map<string, Comment[]>()
+            commentsData.forEach((c: any) => {
+              const comment: Comment = {
+                id: c.id,
+                user_id: c.user_id,
+                comment_text: c.comment_text,
+                created_at: c.created_at,
+                commenter_name: commenterMap.get(c.user_id) || 'Friend',
+              }
+              const existing = commentsMap.get(c.reflection_id) || []
+              commentsMap.set(c.reflection_id, [...existing, comment])
+            })
+
+            setCommentsByReflection(commentsMap)
+          }
+        }
       } catch (err) {
         console.error('Error loading reflections:', err)
         setError('Something went wrong. Please try again.')
@@ -392,6 +462,65 @@ export default function ReadPage() {
               )}
             </div>
           </div>
+
+          {/* Comments Section */}
+          {isUnlocked && currentUserId && (
+            <CommentSection
+              reflectionId={currentFriend.reflection_id}
+              comments={commentsByReflection.get(currentFriend.reflection_id) || []}
+              isUnlocked={isUnlocked}
+              currentUserId={currentUserId}
+              onCommentAdded={async () => {
+                // Re-fetch comments after adding a new one
+                if (weekId && circleId) {
+                  const reflectionIds = friends.map(f => f.reflection_id)
+                  const { data: commentsData } = await supabase
+                    .from('comments')
+                    .select(`
+                      id,
+                      reflection_id,
+                      user_id,
+                      comment_text,
+                      created_at
+                    `)
+                    .in('reflection_id', reflectionIds)
+                    .order('created_at', { ascending: true })
+
+                  if (commentsData) {
+                    // Get commenter profiles
+                    const commenterIds = [...new Set(commentsData.map((c: any) => c.user_id))]
+                    const { data: commenterProfiles } = await supabase
+                      .from('profiles')
+                      .select('id, first_name')
+                      .in('id', commenterIds)
+
+                    const commenterMap = new Map<string, string>()
+                    if (commenterProfiles) {
+                      commenterProfiles.forEach((p: any) => {
+                        commenterMap.set(p.id, p.first_name || 'Friend')
+                      })
+                    }
+
+                    // Group comments by reflection_id
+                    const commentsMap = new Map<string, Comment[]>()
+                    commentsData.forEach((c: any) => {
+                      const comment: Comment = {
+                        id: c.id,
+                        user_id: c.user_id,
+                        comment_text: c.comment_text,
+                        created_at: c.created_at,
+                        commenter_name: commenterMap.get(c.user_id) || 'Friend',
+                      }
+                      const existing = commentsMap.get(c.reflection_id) || []
+                      commentsMap.set(c.reflection_id, [...existing, comment])
+                    })
+
+                    setCommentsByReflection(commentsMap)
+                  }
+                }
+              }}
+            />
+          )}
         </div>
 
         {/* Navigation */}
