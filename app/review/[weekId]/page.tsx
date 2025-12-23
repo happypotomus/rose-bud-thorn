@@ -31,10 +31,10 @@ type CommentWithAuthor = {
 export default async function WeekReviewPage({
   params,
 }: {
-  params: { weekId: string }
+  params: Promise<{ weekId: string }>
 }) {
   const supabase = await createClient()
-  const { weekId } = params
+  const { weekId } = await params
 
   const {
     data: { user },
