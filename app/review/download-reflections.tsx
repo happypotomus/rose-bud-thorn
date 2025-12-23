@@ -18,20 +18,36 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
     setDownloading(true)
     try {
       // Get all past weeks
-      const { data: pastWeeks } = await supabase
+      const { data: allPastWeeks } = await supabase
         .from('weeks')
         .select('id, start_at, end_at')
         .lt('end_at', new Date().toISOString())
         .order('start_at', { ascending: false })
 
-      if (!pastWeeks || pastWeeks.length === 0) {
+      if (!allPastWeeks || allPastWeeks.length === 0) {
         alert('No past reflections found.')
         setDownloading(false)
         return
       }
 
-      // Get all user's reflections for past weeks
-      const weekIds = pastWeeks.map(w => w.id)
+      // Filter to only unlocked weeks (same logic as review page)
+      const { isCircleUnlocked } = await import('@/lib/supabase/unlock')
+      const unlockedWeeks = []
+      for (const week of allPastWeeks) {
+        const unlocked = await isCircleUnlocked(circleId, week.id, supabase)
+        if (unlocked) {
+          unlockedWeeks.push(week)
+        }
+      }
+
+      if (unlockedWeeks.length === 0) {
+        alert('No unlocked weeks found.')
+        setDownloading(false)
+        return
+      }
+
+      // Get all user's reflections for unlocked weeks only
+      const weekIds = unlockedWeeks.map(w => w.id)
       
       if (weekIds.length === 0) {
         alert('No past weeks found.')
@@ -96,10 +112,14 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
         return
       }
 
-      console.log(`Found ${reflections.length} reflections for ${weekIds.length} weeks`)
+      console.log(`Found ${reflections.length} reflections for ${unlockedWeeks.length} unlocked weeks`)
 
       // Create a map of week_id -> week data for quick lookup
-      const weekMap = new Map(pastWeeks.map(w => [w.id, w]))
+      const weekMap = new Map(unlockedWeeks.map(w => [w.id, w]))
+      
+      // Also log which week_ids we have vs which reflections we found
+      console.log('Week IDs:', weekIds)
+      console.log('Reflection week_ids:', reflections.map(r => r.week_id))
 
       // Format all reflections
       let allReflectionsText = 'My Reflections\n'

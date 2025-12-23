@@ -115,7 +115,8 @@ export default async function WeekReviewPage({
     .not('submitted_at', 'is', null)
     .in('user_id', memberUserIds)
 
-  if (reflectionsError || !reflections) {
+  if (reflectionsError || !reflections || reflections.length === 0) {
+    // No reflections found for this week - redirect back to review page
     redirect('/review')
   }
 
