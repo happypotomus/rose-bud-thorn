@@ -88,101 +88,85 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
       console.log(`[DOWNLOAD] Step 3: Fetching reflections for ${weekIds.length} unlocked weeks...`)
       console.log('[DOWNLOAD] Week IDs to query:', weekIds)
       
-      // Check if user has reflections for these weeks
-      const { data: reflectionCount, error: countError } = await supabase
-        .from('reflections')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('circle_id', circleId)
-        .in('week_id', weekIds)
-        .not('submitted_at', 'is', null)
-
-      if (countError) {
-        console.error('[DOWNLOAD] Error counting reflections:', countError)
-      } else {
-        console.log(`[DOWNLOAD] Total reflection count: ${reflectionCount || 0}`)
-      }
-
-      // Fetch all reflections (no limit) - use range to get all
-      // Note: Supabase .in() has a limit of ~100 items, so we might need to batch
-      let allReflections: any[] = []
-      let from = 0
-      const pageSize = 1000
-      let hasMore = true
-      let pageNum = 0
-
-      // If we have more than 100 week IDs, we need to batch the .in() query
-      const MAX_IN_CLAUSE_SIZE = 100
-      const weekIdBatches: string[][] = []
+      // Check if user has reflections for these weeks - query each week individually to debug
+      console.log('[DOWNLOAD] Checking reflections per week individually...')
+      const reflectionsPerWeek: Map<string, any[]> = new Map()
       
-      if (weekIds.length > MAX_IN_CLAUSE_SIZE) {
-        console.log(`[DOWNLOAD] Week IDs exceed ${MAX_IN_CLAUSE_SIZE}, batching queries...`)
-        for (let i = 0; i < weekIds.length; i += MAX_IN_CLAUSE_SIZE) {
-          weekIdBatches.push(weekIds.slice(i, i + MAX_IN_CLAUSE_SIZE))
-        }
-      } else {
-        weekIdBatches.push(weekIds)
-      }
-
-      console.log(`[DOWNLOAD] Processing ${weekIdBatches.length} batch(es) of week IDs`)
-
-      for (const weekIdBatch of weekIdBatches) {
-        console.log(`[DOWNLOAD] Processing batch with ${weekIdBatch.length} week IDs`)
-        from = 0
-        hasMore = true
-        pageNum = 0
-
-        while (hasMore) {
-          pageNum++
-          console.log(`[DOWNLOAD] Fetching page ${pageNum} (range ${from} to ${from + pageSize - 1})...`)
-          
-          const { data: reflections, error } = await supabase
-            .from('reflections')
-            .select(`
-              id,
-              week_id,
-              rose_text,
-              bud_text,
-              thorn_text,
-              rose_audio_url,
-              bud_audio_url,
-              thorn_audio_url,
-              rose_transcript,
-              bud_transcript,
-              thorn_transcript,
-              submitted_at
-            `)
-            .eq('user_id', userId)
-            .eq('circle_id', circleId)
-            .in('week_id', weekIdBatch)
-            .not('submitted_at', 'is', null)
-            .order('submitted_at', { ascending: false })
-            .range(from, from + pageSize - 1)
-
-          if (error) {
-            console.error(`[DOWNLOAD] Error fetching reflections (page ${pageNum}):`, error)
-            alert('Error fetching reflections. Please try again.')
-            setDownloading(false)
-            return
-          }
-
-          if (!reflections || reflections.length === 0) {
-            console.log(`[DOWNLOAD] Page ${pageNum}: No more reflections`)
-            hasMore = false
-          } else {
-            console.log(`[DOWNLOAD] Page ${pageNum}: Found ${reflections.length} reflections`)
-            console.log(`[DOWNLOAD] Page ${pageNum} reflection week_ids:`, reflections.map(r => r.week_id))
-            allReflections = allReflections.concat(reflections)
-            
-            if (reflections.length < pageSize) {
-              console.log(`[DOWNLOAD] Page ${pageNum}: Last page (got ${reflections.length} < ${pageSize})`)
-              hasMore = false
-            } else {
-              from += pageSize
-            }
+      for (const weekId of weekIds) {
+        const { data: weekReflections, error: weekError } = await supabase
+          .from('reflections')
+          .select('id, week_id, submitted_at')
+          .eq('user_id', userId)
+          .eq('circle_id', circleId)
+          .eq('week_id', weekId)
+          .not('submitted_at', 'is', null)
+        
+        if (weekError) {
+          console.error(`[DOWNLOAD] Error checking week ${weekId}:`, weekError)
+        } else {
+          const count = weekReflections?.length || 0
+          console.log(`[DOWNLOAD] Week ${weekId}: Found ${count} reflection(s)`)
+          if (weekReflections && weekReflections.length > 0) {
+            reflectionsPerWeek.set(weekId, weekReflections)
+            console.log(`[DOWNLOAD] Week ${weekId} reflection details:`, weekReflections.map(r => ({ id: r.id, week_id: r.week_id, submitted_at: r.submitted_at })))
           }
         }
       }
+      
+      console.log(`[DOWNLOAD] Total reflections found (per-week check): ${Array.from(reflectionsPerWeek.values()).flat().length}`)
+
+      // Fetch all reflections - query each week individually (more reliable than .in())
+      // This matches the approach used in the review page
+      console.log(`[DOWNLOAD] Fetching reflections for each week individually...`)
+      let allReflections: any[] = []
+
+      for (const weekId of weekIds) {
+        console.log(`[DOWNLOAD] Fetching reflections for week ${weekId}...`)
+        
+        const { data: reflections, error } = await supabase
+          .from('reflections')
+          .select(`
+            id,
+            week_id,
+            rose_text,
+            bud_text,
+            thorn_text,
+            rose_audio_url,
+            bud_audio_url,
+            thorn_audio_url,
+            rose_transcript,
+            bud_transcript,
+            thorn_transcript,
+            submitted_at
+          `)
+          .eq('user_id', userId)
+          .eq('circle_id', circleId)
+          .eq('week_id', weekId)
+          .not('submitted_at', 'is', null)
+          .order('submitted_at', { ascending: false })
+
+        if (error) {
+          console.error(`[DOWNLOAD] Error fetching reflections for week ${weekId}:`, error)
+          // Continue with other weeks instead of failing completely
+          continue
+        }
+
+        if (reflections && reflections.length > 0) {
+          console.log(`[DOWNLOAD] Week ${weekId}: Found ${reflections.length} reflection(s)`)
+          allReflections = allReflections.concat(reflections)
+        } else {
+          console.log(`[DOWNLOAD] Week ${weekId}: No reflections found`)
+        }
+      }
+      
+      // Sort all reflections by submitted_at descending (most recent first)
+      allReflections.sort((a, b) => {
+        const dateA = new Date(a.submitted_at).getTime()
+        const dateB = new Date(b.submitted_at).getTime()
+        return dateB - dateA
+      })
+      
+      console.log(`[DOWNLOAD] Total reflections collected: ${allReflections.length}`)
 
       const reflections = allReflections
 
