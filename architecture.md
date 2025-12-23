@@ -100,6 +100,8 @@ Users read each other's reflections sequentially
 - `id` (UUID, PK) → References `auth.users.id`
 - `first_name` (TEXT, required)
 - `phone` (TEXT, unique, required)
+- `sms_consent_at` (TIMESTAMPTZ, nullable) → Timestamp when user consented to SMS (A2P 10DLC compliance)
+- `sms_opted_out_at` (TIMESTAMPTZ, nullable) → Timestamp when user opted out (STOP command)
 - `created_at` (TIMESTAMPTZ)
 
 **Relationships**:
@@ -108,6 +110,11 @@ Users read each other's reflections sequentially
 - One-to-many with `reflections`
 
 **Key Constraint**: `phone` must be unique (enforced at DB level)
+
+**SMS Compliance**:
+- `sms_consent_at`: Set when user provides phone during signup (implicit consent)
+- `sms_opted_out_at`: Set when user replies STOP or Twilio reports opt-out (error code 21610)
+- All SMS sending functions check `sms_opted_out_at` before sending
 
 ---
 
@@ -252,6 +259,7 @@ Users read each other's reflections sequentially
 - `idx_reflections_week_id` → Fast reflection queries by week
 - `idx_reflections_user_id` → Fast reflection queries by user
 - `idx_notification_logs_*` → Fast notification log queries
+- `idx_profiles_sms_opted_out` → Fast opt-out filtering (partial index on `sms_opted_out_at IS NOT NULL`)
 
 ---
 
@@ -623,13 +631,17 @@ When finished:
      - Gets all members
      - Filters to pre-week members (excludes mid-week joiners)
      - Gets members who haven't submitted
+     - Filters out users with sms_opted_out_at set
      - Sends reminder SMS
+     - If Twilio returns opt-out error (21610), marks user as opted out
      - Logs to notification_logs
 ```
 
 **Key Design**:
 - **Per-circle iteration**: Each circle processed independently
 - **Mid-week joiner exclusion**: Only sends to members who should have submitted
+- **Opt-out checking**: All SMS functions check `sms_opted_out_at` before sending
+- **Automatic opt-out handling**: Twilio opt-out errors (21610) automatically mark users as opted out
 - **Deno environment**: Edge Functions run in Deno, use Twilio REST API directly
 
 ---
@@ -931,6 +943,27 @@ export async function POST(request: NextRequest) {
 
 ---
 
+#### `/api/twilio-webhook`
+**File**: `app/api/twilio-webhook/route.ts`
+
+**Purpose**: Handle SMS replies from users (STOP/START commands)
+
+**Input**: Twilio webhook form data (Body, From, To)
+
+**Logic**:
+1. Parses message body (STOP/START commands)
+2. Normalizes phone number to E.164 format
+3. Finds user profile by phone number
+4. For STOP: Sets `sms_opted_out_at` timestamp
+5. For START: Clears `sms_opted_out_at` (resubscribe)
+6. Returns TwiML response confirming action
+
+**Configuration**: Set webhook URL in Twilio Console → Phone Numbers → [Your Number] → Messaging
+
+**Why Separate Endpoint?**: Twilio requires POST endpoint for handling SMS replies, returns TwiML XML responses
+
+---
+
 ## 8. Utility Libraries
 
 ### 8.1 Supabase Utilities
@@ -1011,13 +1044,17 @@ export async function POST(request: NextRequest) {
 **Logic**:
 1. Uses service role client (bypasses RLS)
 2. Checks if circle is unlocked
-3. Gets all members' phone numbers
-4. Checks `notification_logs` for duplicates
-5. Sends SMS to members who haven't received it
-6. Logs each send to `notification_logs`
+3. Gets all members' phone numbers (including `sms_opted_out_at`)
+4. Filters out users with `sms_opted_out_at` set
+5. Checks `notification_logs` for duplicates
+6. Sends SMS to members who haven't received it
+7. If Twilio returns opt-out error (21610), marks user as opted out
+8. Logs each send to `notification_logs`
 
 **Key Features**:
 - Duplicate prevention
+- Opt-out checking before sending
+- Automatic opt-out handling on Twilio errors
 - Phone number normalization
 - Includes `/read` link in SMS
 - Returns detailed results
@@ -1054,8 +1091,13 @@ export async function POST(request: NextRequest) {
 - Automatic phone number normalization (E.164 format)
 - Detailed error messages
 - Validates environment variables
+- Preserves Twilio opt-out error code (21610) for upstream handling
 
 **Usage**: Used by unlock SMS and reminder Edge Functions
+
+**Error Handling**:
+- Twilio error code 21610 (user opted out) is preserved and re-thrown
+- Upstream functions catch this error and mark user as opted out in database
 
 ---
 
@@ -1146,6 +1188,16 @@ export async function POST(request: NextRequest) {
 - `TWILIO_ACCOUNT_SID`
 - `TWILIO_AUTH_TOKEN`
 - `TWILIO_PHONE_NUMBER`
+
+**SMS Compliance (A2P 10DLC)**:
+- **Consent Tracking**: `sms_consent_at` timestamp recorded when user provides phone during signup
+- **Opt-Out Handling**: `sms_opted_out_at` timestamp set when user replies STOP or Twilio reports opt-out
+- **Opt-Out Checking**: All SMS functions check `sms_opted_out_at` before sending
+- **Webhook Endpoint**: `/api/twilio-webhook` handles STOP/START replies and updates opt-out status
+- **Automatic Detection**: Twilio error code 21610 (opted out) automatically marks users in database
+- **Resubscription**: Users can reply START to clear opt-out status
+
+**Required for US SMS**: A2P 10DLC brand and campaign registration required for sending to US numbers
 
 ---
 
