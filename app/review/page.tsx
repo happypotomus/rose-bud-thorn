@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getPastUnlockedWeeks, formatWeekRange } from '@/lib/supabase/review'
+import { DownloadReflections } from './download-reflections'
 import Link from 'next/link'
 
 export default async function ReviewPage() {
@@ -40,9 +41,16 @@ export default async function ReviewPage() {
           </Link>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-center">
-          Review Reflections
-        </h1>
+        <div className="mb-6 sm:mb-8 text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
+            Review Reflections
+          </h1>
+          {monthGroups.length > 0 && (
+            <div className="flex justify-center">
+              <DownloadReflections userId={user.id} circleId={membership.circle_id} />
+            </div>
+          )}
+        </div>
 
         {monthGroups.length === 0 ? (
           <div className="text-center py-8 sm:py-12">
