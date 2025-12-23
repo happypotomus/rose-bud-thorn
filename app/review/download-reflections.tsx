@@ -122,6 +122,31 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
 
       for (const weekId of weekIds) {
         console.log(`[DOWNLOAD] Fetching reflections for week ${weekId}...`)
+        console.log(`[DOWNLOAD] Query params: user_id=${userId}, circle_id=${circleId}, week_id=${weekId}`)
+        
+        // First, let's check what reflections exist for this week in this circle (any user)
+        const { data: allWeekReflections, error: allError } = await supabase
+          .from('reflections')
+          .select('id, user_id, week_id, circle_id, submitted_at')
+          .eq('circle_id', circleId)
+          .eq('week_id', weekId)
+          .not('submitted_at', 'is', null)
+        
+        if (allError) {
+          console.error(`[DOWNLOAD] Error fetching all reflections for week ${weekId}:`, allError)
+        } else {
+          console.log(`[DOWNLOAD] Week ${weekId}: Total reflections in circle: ${allWeekReflections?.length || 0}`)
+          if (allWeekReflections && allWeekReflections.length > 0) {
+            console.log(`[DOWNLOAD] Week ${weekId}: All reflection user_ids:`, allWeekReflections.map(r => r.user_id))
+            console.log(`[DOWNLOAD] Week ${weekId}: Looking for user_id: ${userId}`)
+            const userReflection = allWeekReflections.find(r => r.user_id === userId)
+            if (userReflection) {
+              console.log(`[DOWNLOAD] Week ${weekId}: Found user's reflection:`, userReflection)
+            } else {
+              console.log(`[DOWNLOAD] Week ${weekId}: User's reflection NOT found in results`)
+            }
+          }
+        }
         
         const { data: reflections, error } = await supabase
           .from('reflections')
