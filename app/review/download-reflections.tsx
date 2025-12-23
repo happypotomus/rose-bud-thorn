@@ -39,27 +39,56 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
         return
       }
 
-      const { data: reflections, error } = await supabase
-        .from('reflections')
-        .select(`
-          id,
-          week_id,
-          rose_text,
-          bud_text,
-          thorn_text,
-          rose_audio_url,
-          bud_audio_url,
-          thorn_audio_url,
-          rose_transcript,
-          bud_transcript,
-          thorn_transcript,
-          submitted_at
-        `)
-        .eq('user_id', userId)
-        .eq('circle_id', circleId)
-        .in('week_id', weekIds)
-        .not('submitted_at', 'is', null)
-        .order('submitted_at', { ascending: false })
+      // Fetch all reflections (no limit) - use range to get all
+      let allReflections: any[] = []
+      let from = 0
+      const pageSize = 1000
+      let hasMore = true
+
+      while (hasMore) {
+        const { data: reflections, error } = await supabase
+          .from('reflections')
+          .select(`
+            id,
+            week_id,
+            rose_text,
+            bud_text,
+            thorn_text,
+            rose_audio_url,
+            bud_audio_url,
+            thorn_audio_url,
+            rose_transcript,
+            bud_transcript,
+            thorn_transcript,
+            submitted_at
+          `)
+          .eq('user_id', userId)
+          .eq('circle_id', circleId)
+          .in('week_id', weekIds)
+          .not('submitted_at', 'is', null)
+          .order('submitted_at', { ascending: false })
+          .range(from, from + pageSize - 1)
+
+        if (error) {
+          console.error('Error fetching reflections:', error)
+          alert('Error fetching reflections. Please try again.')
+          setDownloading(false)
+          return
+        }
+
+        if (!reflections || reflections.length === 0) {
+          hasMore = false
+        } else {
+          allReflections = allReflections.concat(reflections)
+          if (reflections.length < pageSize) {
+            hasMore = false
+          } else {
+            from += pageSize
+          }
+        }
+      }
+
+      const reflections = allReflections
 
       if (error) {
         console.error('Error fetching reflections:', error)
