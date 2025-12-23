@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { CommentSection } from '@/app/read/comment-section'
-import { ExportReflection } from '@/app/home/export-reflection'
+import { formatReflectionAsText, copyToClipboard, hasPendingTranscripts } from '@/lib/utils/export-reflection'
 import Link from 'next/link'
 
 type ReflectionWithAuthor = {
@@ -52,6 +52,7 @@ export function ReviewDisplay({
 }: ReviewDisplayProps) {
   const [commentsMap, setCommentsMap] = useState<Map<string, CommentWithAuthor[]>>(commentsByReflection)
   const [showTranscripts, setShowTranscripts] = useState<Record<string, { rose: boolean; bud: boolean; thorn: boolean }>>({})
+  const [copiedReflectionId, setCopiedReflectionId] = useState<string | null>(null)
   const supabase = createClient()
 
   const formatWeekRange = (start: string, end: string): string => {
@@ -179,13 +180,29 @@ export function ReviewDisplay({
                     )}
                   </h2>
                   {isOwnReflection && (
-                    <div className="flex-shrink-0">
-                      <ExportReflection
-                        reflection={getReflectionData(reflection)}
-                        weekStartDate={new Date(weekStart)}
-                        weekEndDate={new Date(weekEnd)}
-                      />
-                    </div>
+                    <button
+                      onClick={async () => {
+                        const reflectionData = getReflectionData(reflection)
+                        const text = formatReflectionAsText(reflectionData, new Date(weekStart), new Date(weekEnd))
+                        const success = await copyToClipboard(text)
+                        if (success) {
+                          setCopiedReflectionId(reflection.reflection_id)
+                          setTimeout(() => setCopiedReflectionId(null), 2000)
+                        }
+                      }}
+                      className="flex-shrink-0 p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                      title="Copy reflection to clipboard"
+                    >
+                      {copiedReflectionId === reflection.reflection_id ? (
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      )}
+                    </button>
                   )}
                 </div>
 
@@ -328,6 +345,16 @@ export function ReviewDisplay({
               </div>
             )
           })}
+        </div>
+
+        {/* Back to Review Button */}
+        <div className="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-gray-200">
+          <Link
+            href="/review"
+            className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium text-base sm:text-lg transition-colors"
+          >
+            ← Back to Review
+          </Link>
         </div>
       </div>
     </main>
