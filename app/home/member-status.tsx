@@ -26,11 +26,7 @@ export function MemberStatus({ members }: MemberStatusProps) {
         {members.map((member) => (
           <div
             key={member.userId}
-            className={`flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-colors ${
-              member.hasCompleted
-                ? 'bg-green-50 border border-green-200'
-                : 'bg-gray-50 border border-gray-200'
-            }`}
+            className="flex items-center gap-2 sm:gap-3"
           >
             <div
               className={`flex-shrink-0 ${
@@ -38,14 +34,14 @@ export function MemberStatus({ members }: MemberStatusProps) {
               }`}
             >
               {member.hasCompleted ? (
-                <Check className="w-5 h-5 sm:w-6 sm:h-6" />
+                <Check className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
-                <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
             </div>
             <span
-              className={`text-base sm:text-lg font-medium flex-1 ${
-                member.hasCompleted ? 'text-green-800' : 'text-gray-600'
+              className={`text-base sm:text-lg font-medium ${
+                member.hasCompleted ? 'text-green-600' : 'text-gray-600'
               }`}
             >
               {member.firstName}
