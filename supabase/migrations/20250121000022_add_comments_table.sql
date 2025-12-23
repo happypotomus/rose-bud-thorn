@@ -29,6 +29,7 @@ ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 -- ============================================
 
 -- SELECT: Users can view comments on reflections in their circle
+DROP POLICY IF EXISTS "View comments in own circle" ON comments;
 CREATE POLICY "View comments in own circle" ON comments
   FOR SELECT USING (
     EXISTS (
@@ -40,6 +41,7 @@ CREATE POLICY "View comments in own circle" ON comments
   );
 
 -- INSERT: Users can add comments to reflections in their circle
+DROP POLICY IF EXISTS "Add comments in own circle" ON comments;
 CREATE POLICY "Add comments in own circle" ON comments
   FOR INSERT WITH CHECK (
     auth.uid() = user_id
@@ -52,10 +54,12 @@ CREATE POLICY "Add comments in own circle" ON comments
   );
 
 -- UPDATE: Users can only edit their own comments
+DROP POLICY IF EXISTS "Update own comments" ON comments;
 CREATE POLICY "Update own comments" ON comments
   FOR UPDATE USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
 -- DELETE: Users can only delete their own comments
+DROP POLICY IF EXISTS "Delete own comments" ON comments;
 CREATE POLICY "Delete own comments" ON comments
   FOR DELETE USING (auth.uid() = user_id);
