@@ -43,26 +43,24 @@ export function CircleSwitcher({ circles, currentCircleId }: CircleSwitcherProps
   const selectedCircle = circles.find(c => c.id === selectedCircleId) || circles[0]
 
   return (
-    <div className="w-full flex justify-center pt-1 px-6 mb-6">
-      <div className="relative inline-block">
-        <select
-          value={selectedCircleId}
-          onChange={(e) => handleCircleChange(e.target.value)}
-          className="w-auto min-w-[140px] h-9 px-3 pr-8 text-sm font-medium text-black bg-muted/50 rounded-md border-0 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-0 transition-all hover:bg-muted/70"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2 4L6 8L10 4' stroke='%23000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'right 0.5rem center',
-            paddingRight: '2rem',
-          }}
-        >
-          {circles.map((circle) => (
-            <option key={circle.id} value={circle.id}>
-              {circle.name}
-            </option>
-          ))}
-        </select>
-      </div>
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+      <select
+        value={selectedCircleId}
+        onChange={(e) => handleCircleChange(e.target.value)}
+        className="w-auto min-w-[140px] h-9 px-3 pr-8 text-sm font-medium text-black bg-muted/50 rounded-md border-0 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-0 transition-all hover:bg-muted/70"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2 4L6 8L10 4' stroke='%23000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'right 0.5rem center',
+          paddingRight: '2rem',
+        }}
+      >
+        {circles.map((circle) => (
+          <option key={circle.id} value={circle.id}>
+            {circle.name}
+          </option>
+        ))}
+      </select>
     </div>
   )
 }

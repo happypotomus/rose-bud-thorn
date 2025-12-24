@@ -254,11 +254,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <span className="text-sm sm:text-base font-medium">Review Reflections</span>
       </Link>
       
+      {/* Circle Switcher - positioned absolutely at top center */}
+      {circles.length > 1 && (
+        <CircleSwitcher circles={circles} currentCircleId={circleId} />
+      )}
+      
       <div className="text-center w-full max-w-2xl">
-        {/* Circle Switcher */}
-        {circles.length > 1 && (
-          <CircleSwitcher circles={circles} currentCircleId={circleId} />
-        )}
         {/* State: Mid-week joiner */}
         {homeState === 'midweek_joiner' && nextWeekStart ? (
           <div className="space-y-5 sm:space-y-6">
