@@ -40,10 +40,10 @@ export function HamburgerMenu({ currentCircleId }: HamburgerMenuProps) {
     : '/review'
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 text-gray-600 hover:text-gray-800 transition-colors z-20"
+        className="p-2 text-gray-600 hover:text-gray-800 transition-colors"
         aria-label="Menu"
       >
         {isOpen ? (
@@ -54,7 +54,7 @@ export function HamburgerMenu({ currentCircleId }: HamburgerMenuProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute top-12 right-4 sm:top-14 sm:right-6 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[200px] z-30">
+        <div className="absolute top-12 right-0 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[200px] z-30">
           <Link
             href={reviewLink}
             onClick={handleMenuItemClick}
