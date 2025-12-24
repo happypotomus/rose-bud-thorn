@@ -36,16 +36,19 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     .single()
 
   // Get all user's circle memberships
+  // Order by created_at DESC so most recently joined circle is first (default)
   const { data: memberships, error: membershipsError } = await supabase
     .from('circle_members')
     .select(`
       circle_id,
+      created_at,
       circles (
         id,
         name
       )
     `)
     .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
 
   // Debug logging in development
   if (process.env.NODE_ENV === 'development') {
