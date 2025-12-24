@@ -48,7 +48,7 @@ export function CircleSwitcher({ circles, currentCircleId }: CircleSwitcherProps
         <select
           value={selectedCircleId}
           onChange={(e) => handleCircleChange(e.target.value)}
-          className="w-auto min-w-[140px] h-9 px-3 pr-8 text-sm font-medium text-black bg-gray-100/50 rounded-md border-0 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-0 transition-all hover:bg-gray-100/70"
+          className="w-auto min-w-[140px] h-9 px-3 pr-8 text-sm font-medium text-black bg-muted/50 rounded-md border-0 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-0 transition-all hover:bg-muted/70"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2 4L6 8L10 4' stroke='%23000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
             backgroundRepeat: 'no-repeat',
