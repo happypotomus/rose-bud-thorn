@@ -16,6 +16,8 @@ type ReflectionWithAuthor = {
   rose_transcript: string | null
   bud_transcript: string | null
   thorn_transcript: string | null
+  photo_url: string | null
+  photo_caption: string | null
   submitted_at: string | null
 }
 
