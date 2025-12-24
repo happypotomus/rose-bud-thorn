@@ -147,9 +147,12 @@ export default function InviteForm() {
         return
       }
 
-      // If user was already in a circle, they'll be redirected
-      // Otherwise, redirect to home
-      router.push('/home')
+      // Redirect to home with the circleId of the circle they just joined
+      // This ensures they see the correct circle (especially important for multi-circle support)
+      const redirectUrl = result.circleId 
+        ? `/home?circleId=${result.circleId}`
+        : '/home'
+      router.push(redirectUrl)
     } catch (err) {
       setError('Something went wrong. Please try again.')
       setLoading(false)
