@@ -42,20 +42,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate invite token from circle name: lowercase, no spaces, combined
-    const inviteToken = name.trim().toLowerCase().replace(/\s+/g, '')
+    let baseToken = name.trim().toLowerCase().replace(/\s+/g, '')
+    let inviteToken = baseToken
+    let counter = 1
 
-    // Check if a circle with this invite_token already exists
-    const { data: existingCircle } = await supabase
-      .from('circles')
-      .select('id')
-      .eq('invite_token', inviteToken)
-      .single()
+    // Check if a circle with this invite_token already exists, append number if needed
+    while (true) {
+      const { data: existingCircle } = await supabase
+        .from('circles')
+        .select('id')
+        .eq('invite_token', inviteToken)
+        .single()
 
-    if (existingCircle) {
-      return NextResponse.json(
-        { error: 'A circle with this name already exists. Please choose a different name.' },
-        { status: 400 }
-      )
+      if (!existingCircle) {
+        // Token is unique, break out of loop
+        break
+      }
+
+      // Token exists, try with a number appended
+      inviteToken = `${baseToken}${counter}`
+      counter++
     }
 
     // Create the circle
