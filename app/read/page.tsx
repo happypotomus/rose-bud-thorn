@@ -106,7 +106,7 @@ export default function ReadPage() {
         const { data: allMembers } = await supabase
           .from('circle_members')
           .select('user_id')
-          .eq('circle_id', membership.circle_id)
+          .eq('circle_id', selectedCircleId)
           .neq('user_id', user.id)
 
         if (!allMembers || allMembers.length === 0) {
@@ -132,7 +132,7 @@ export default function ReadPage() {
             bud_transcript,
             thorn_transcript
           `)
-          .eq('circle_id', membership.circle_id)
+          .eq('circle_id', selectedCircleId)
           .eq('week_id', week.id)
           .not('submitted_at', 'is', null)
           .in('user_id', allMembers.map(m => m.user_id))
@@ -181,7 +181,7 @@ export default function ReadPage() {
         setFriends(friendReflections)
 
         // Check if circle is unlocked (pass client-side supabase client)
-        const unlocked = await isCircleUnlocked(membership.circle_id, week.id, supabase)
+        const unlocked = await isCircleUnlocked(selectedCircleId, week.id, supabase)
         setIsUnlocked(unlocked)
 
         // Fetch comments for all reflections
