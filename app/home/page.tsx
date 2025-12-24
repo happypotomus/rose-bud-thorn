@@ -139,8 +139,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     .eq('week_id', currentWeek.id)
     .single()
 
-  // Check if user joined mid-week (after the current week started)
-  const joinedMidWeek = await didUserJoinMidWeek(user.id, currentWeek.id)
+  // Check if user joined mid-week (after the current week started) for the selected circle
+  const joinedMidWeek = await didUserJoinMidWeek(user.id, currentWeek.id, circleId)
   
   // Debug logging
   if (process.env.NODE_ENV === 'development') {

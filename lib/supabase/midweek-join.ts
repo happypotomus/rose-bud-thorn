@@ -2,16 +2,18 @@ import { createClient } from './server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 /**
- * Check if a user joined a circle mid-week (after the week started)
+ * Check if a user joined a specific circle mid-week (after the week started)
  * 
  * @param userId - The user ID to check
  * @param weekId - The week ID to check
+ * @param circleId - The circle ID to check (optional, if not provided checks earliest membership)
  * @param supabaseClient - Optional Supabase client (if not provided, creates one with server client)
- * @returns true if user joined after the week started, false otherwise
+ * @returns true if user joined the circle after the week started, false otherwise
  */
 export async function didUserJoinMidWeek(
   userId: string,
   weekId: string,
+  circleId?: string,
   supabaseClient?: SupabaseClient
 ): Promise<boolean> {
   const supabase = supabaseClient || await createClient()
@@ -35,22 +37,34 @@ export async function didUserJoinMidWeek(
   }
 
   // Get when the user joined the circle
-  const { data: membership, error: membershipError } = await supabase
+  let membershipQuery = supabase
     .from('circle_members')
     .select('created_at')
     .eq('user_id', userId)
-    .single()
 
-  if (membershipError || !membership) {
+  // If circleId is provided, check that specific circle
+  if (circleId) {
+    membershipQuery = membershipQuery.eq('circle_id', circleId)
+  }
+
+  const { data: memberships, error: membershipError } = await membershipQuery
+    .order('created_at', { ascending: true })
+    .limit(1)
+
+  if (membershipError || !memberships || memberships.length === 0) {
     console.error('[Mid-week join check] Error fetching circle membership:', {
       userId,
       weekId,
+      circleId,
       error: membershipError,
-      membership: membership
+      memberships: memberships
     })
     // Return false on error - safer to allow reflection than block it
     return false
   }
+
+  // Use the first (and only) membership returned
+  const membership = memberships[0]
 
   // Check if user joined after the week started
   // Convert to Date objects and ensure we're comparing timestamps correctly
@@ -64,6 +78,7 @@ export async function didUserJoinMidWeek(
   console.log('[Mid-week join check]', {
     userId,
     weekId,
+    circleId: circleId || 'earliest',
     weekStartRaw: week.start_at,
     joinTimeRaw: membership.created_at,
     weekStartISO: weekStart.toISOString(),

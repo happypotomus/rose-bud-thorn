@@ -36,7 +36,7 @@ export default async function ReflectionPage() {
   // Check if user joined mid-week for ALL circles (after the current week started)
   // If user joined mid-week in all circles, redirect to home
   const joinedMidWeekChecks = await Promise.all(
-    memberships.map(m => didUserJoinMidWeek(user.id, currentWeek.id))
+    memberships.map(m => didUserJoinMidWeek(user.id, currentWeek.id, m.circle_id))
   )
   const allJoinedMidWeek = joinedMidWeekChecks.every(joined => joined)
 
