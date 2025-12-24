@@ -71,7 +71,6 @@ export function PhotoUploader({
       if (uploadError) {
         console.error('Photo upload error details:', {
           message: uploadError.message,
-          statusCode: uploadError.statusCode,
           error: uploadError,
         })
         // Provide more specific error message
