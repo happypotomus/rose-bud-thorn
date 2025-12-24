@@ -2,7 +2,7 @@
 
 // Trigger fresh deployment after making repo public
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getCurrentWeekClient } from '@/lib/supabase/week'
 import { isCircleUnlocked } from '@/lib/supabase/unlock'
@@ -34,6 +34,7 @@ type Comment = {
 
 export default function ReadPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
   
   const [loading, setLoading] = useState(true)
@@ -80,20 +81,26 @@ export default function ReadPage() {
 
         setWeekId(week.id)
 
-        // Get user's circle
-        const { data: membership } = await supabase
+        // Get all user's circles
+        const { data: memberships } = await supabase
           .from('circle_members')
           .select('circle_id')
           .eq('user_id', user.id)
-          .single()
 
-        if (!membership) {
+        if (!memberships || memberships.length === 0) {
           setError('You are not in a circle')
           setLoading(false)
           return
         }
 
-        setCircleId(membership.circle_id)
+        // Get circleId from URL params or use first circle
+        const urlCircleId = searchParams.get('circleId')
+        const circleIds = memberships.map(m => m.circle_id)
+        const selectedCircleId = urlCircleId && circleIds.includes(urlCircleId)
+          ? urlCircleId
+          : circleIds[0]
+
+        setCircleId(selectedCircleId)
 
         // Get all circle members (excluding current user)
         const { data: allMembers } = await supabase

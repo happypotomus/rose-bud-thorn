@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
 type Circle = {
@@ -15,6 +15,7 @@ type CircleSwitcherProps = {
 
 export function CircleSwitcher({ circles, currentCircleId }: CircleSwitcherProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
   const [selectedCircleId, setSelectedCircleId] = useState(currentCircleId)
 
@@ -27,7 +28,10 @@ export function CircleSwitcher({ circles, currentCircleId }: CircleSwitcherProps
     // Update URL with new circleId
     const params = new URLSearchParams(searchParams.toString())
     params.set('circleId', circleId)
-    router.push(`/home?${params.toString()}`)
+    // Use current pathname to support both /home and /review
+    router.push(`${pathname}?${params.toString()}`)
+    // Refresh the page to load new circle data
+    router.refresh()
   }
 
   // Don't show switcher if user only has one circle

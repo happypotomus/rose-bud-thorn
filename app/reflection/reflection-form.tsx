@@ -21,11 +21,10 @@ const steps: Step[] = ['rose', 'bud', 'thorn', 'review']
 
 type ReflectionFormProps = {
   weekId: string
-  circleId: string
   userId: string
 }
 
-export function ReflectionForm({ weekId, circleId, userId }: ReflectionFormProps) {
+export function ReflectionForm({ weekId, userId }: ReflectionFormProps) {
   const router = useRouter()
   const supabase = createClient()
   
@@ -130,40 +129,72 @@ export function ReflectionForm({ weekId, circleId, userId }: ReflectionFormProps
         return
       }
 
-      // Submit reflection
-      const { data: insertedReflection, error: submitError } = await supabase
-        .from('reflections')
-        .insert({
-          circle_id: circleId,
-          week_id: weekId,
-          user_id: user.id,
-          rose_text: draft.rose.trim(),
-          bud_text: draft.bud.trim(),
-          thorn_text: draft.thorn.trim(),
-          rose_audio_url: draft.rose_audio_url || null,
-          bud_audio_url: draft.bud_audio_url || null,
-          thorn_audio_url: draft.thorn_audio_url || null,
-          submitted_at: new Date().toISOString(),
-        })
-        .select('id')
-        .single()
+      // Get all circles the user belongs to
+      const { data: memberships, error: membershipsError } = await supabase
+        .from('circle_members')
+        .select('circle_id')
+        .eq('user_id', user.id)
 
-      if (submitError || !insertedReflection) {
-        console.error('Submission error:', submitError)
-        setError(submitError?.message || 'Failed to submit reflection. Please try again.')
+      if (membershipsError || !memberships || memberships.length === 0) {
+        console.error('Error fetching user circles:', membershipsError)
+        setError('You must be in at least one circle to submit a reflection.')
         setLoading(false)
         return
       }
 
+      const circleIds = memberships.map(m => m.circle_id)
+      const submittedAt = new Date().toISOString()
+
+      // Submit reflection to all circles the user belongs to
+      const reflectionData = {
+        week_id: weekId,
+        user_id: user.id,
+        rose_text: draft.rose.trim(),
+        bud_text: draft.bud.trim(),
+        thorn_text: draft.thorn.trim(),
+        rose_audio_url: draft.rose_audio_url || null,
+        bud_audio_url: draft.bud_audio_url || null,
+        thorn_audio_url: draft.thorn_audio_url || null,
+        submitted_at: submittedAt,
+      }
+
+      // Insert reflection for each circle
+      const insertPromises = circleIds.map(circleId =>
+        supabase
+          .from('reflections')
+          .insert({
+            ...reflectionData,
+            circle_id: circleId,
+          })
+          .select('id')
+          .single()
+      )
+
+      const results = await Promise.all(insertPromises)
+      const errors = results.filter(r => r.error)
+
+      if (errors.length > 0) {
+        console.error('Some reflection submissions failed:', errors)
+        // If all failed, show error. If some succeeded, continue but log
+        if (errors.length === circleIds.length) {
+          setError('Failed to submit reflection. Please try again.')
+          setLoading(false)
+          return
+        }
+      }
+
+      const successfulReflections = results.filter(r => !r.error && r.data)
+      const firstReflectionId = successfulReflections[0]?.data?.id
+
       // Trigger transcription if any audio URLs exist (fire-and-forget)
-      // The API will fetch audio URLs from the database
+      // Use the first reflection ID for transcription (audio URLs are the same for all)
       const hasAudio = draft.rose_audio_url || draft.bud_audio_url || draft.thorn_audio_url
-      if (hasAudio) {
+      if (hasAudio && firstReflectionId) {
         fetch('/api/transcribe-audio', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            reflectionId: insertedReflection.id,
+            reflectionId: firstReflectionId,
           }),
         }).catch((err) => {
           // Log error but don't block the user flow
@@ -171,15 +202,18 @@ export function ReflectionForm({ weekId, circleId, userId }: ReflectionFormProps
         })
       }
 
-      // Check if circle is unlocked and send unlock SMS if needed
+      // Check if circles are unlocked and send unlock SMS if needed
       // This is fire-and-forget - we don't wait for it to complete
-      fetch('/api/send-unlock-sms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ circleId, weekId }),
-      }).catch((err) => {
-        // Log error but don't block the user flow
-        console.error('Error sending unlock SMS:', err)
+      // Send unlock check for all circles
+      circleIds.forEach(circleId => {
+        fetch('/api/send-unlock-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ circleId, weekId }),
+        }).catch((err) => {
+          // Log error but don't block the user flow
+          console.error(`Error sending unlock SMS for circle ${circleId}:`, err)
+        })
       })
 
       // Clear draft from localStorage

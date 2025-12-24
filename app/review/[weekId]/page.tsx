@@ -28,13 +28,19 @@ type CommentWithAuthor = {
   commenter_name: string
 }
 
+type WeekReviewPageProps = {
+  params: Promise<{ weekId: string }>
+  searchParams: Promise<{ circleId?: string }>
+}
+
 export default async function WeekReviewPage({
   params,
-}: {
-  params: Promise<{ weekId: string }>
-}) {
+  searchParams,
+}: WeekReviewPageProps) {
   const supabase = await createClient()
   const { weekId } = await params
+  const params_search = await searchParams
+  const selectedCircleId = params_search.circleId
 
   const {
     data: { user },
@@ -61,24 +67,27 @@ export default async function WeekReviewPage({
     redirect('/home')
   }
 
-  // Get user's circle
-  const { data: membership } = await supabase
+  // Get all user's circle memberships
+  const { data: memberships } = await supabase
     .from('circle_members')
     .select('circle_id')
     .eq('user_id', user.id)
-    .single()
 
-  if (!membership) {
+  if (!memberships || memberships.length === 0) {
     redirect('/home')
   }
 
-  const circleId = membership.circle_id
+  // Determine which circle to use
+  const circleIds = memberships.map(m => m.circle_id)
+  const circleId = selectedCircleId && circleIds.includes(selectedCircleId)
+    ? selectedCircleId
+    : circleIds[0]
 
   // Check if circle was unlocked for this week
   const wasUnlocked = await isCircleUnlocked(circleId, weekId, supabase)
 
   if (!wasUnlocked) {
-    redirect('/review')
+    redirect(selectedCircleId ? `/review?circleId=${selectedCircleId}` : '/review')
   }
 
   // Get all circle members

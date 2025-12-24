@@ -26,6 +26,20 @@ export async function sendUnlockSMS(
   
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+  // Fetch circle name from database
+  const { data: circle, error: circleError } = await supabase
+    .from('circles')
+    .select('name')
+    .eq('id', circleId)
+    .single()
+
+  if (circleError || !circle) {
+    console.error('Error fetching circle name for unlock SMS:', circleError)
+    // Continue anyway, but use generic name
+  }
+
+  const circleName = circle?.name || 'your circle'
+
   // Check if circle is unlocked (pass the same client to avoid RLS issues)
   const unlocked = await isCircleUnlocked(circleId, weekId, supabase)
   
@@ -87,7 +101,7 @@ export async function sendUnlockSMS(
   const readUrl = `${appBaseUrl}/read`
 
   // Send unlock SMS to members who haven't received it yet
-  const message = `Everyone in your circle has submitted! You can now read each other's reflections. ${readUrl}`
+  const message = `Everyone in your circle (${circleName}) has submitted! You can now read each other's reflections. ${readUrl}`
   let sent = 0
   let errors = 0
   const results: any[] = []

@@ -105,16 +105,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check if user is already in a circle
+    // Check if user is already in THIS specific circle
     const { data: existingMembership } = await supabase
       .from('circle_members')
       .select('circle_id')
       .eq('user_id', userId)
-      .single()
+      .eq('circle_id', circle.id)
+      .maybeSingle()
 
     if (existingMembership) {
-      // User already in a circle - redirect to their existing circle
-      // Return the existing circle_id so frontend can redirect
+      // User already in this specific circle - return success
       return NextResponse.json({
         success: true,
         alreadyInCircle: true,
@@ -137,18 +137,12 @@ export async function POST(request: NextRequest) {
         details: membershipError.details,
         hint: membershipError.hint,
       })
-      // If unique constraint violation, user is already in a circle
+      // If unique constraint violation, user is already in this specific circle
       if (membershipError.code === '23505') {
-        const { data: existing } = await supabase
-          .from('circle_members')
-          .select('circle_id')
-          .eq('user_id', userId)
-          .single()
-
         return NextResponse.json({
           success: true,
           alreadyInCircle: true,
-          circleId: existing?.circle_id,
+          circleId: circle.id,
         })
       }
 

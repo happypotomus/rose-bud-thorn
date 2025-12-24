@@ -2,9 +2,16 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getPastUnlockedWeeks, formatWeekRange } from '@/lib/supabase/review'
 import { DownloadReflections } from './download-reflections'
+import { CircleSwitcher } from '../home/circle-switcher'
 import Link from 'next/link'
 
-export default async function ReviewPage() {
+type ReviewPageProps = {
+  searchParams: Promise<{ circleId?: string }>
+}
+
+export default async function ReviewPage({ searchParams }: ReviewPageProps) {
+  const params = await searchParams
+  const selectedCircleId = params.circleId
   const supabase = await createClient()
 
   const {
@@ -15,31 +22,57 @@ export default async function ReviewPage() {
     redirect('/invite')
   }
 
-  // Get user's circle
-  const { data: membership } = await supabase
+  // Get all user's circle memberships
+  const { data: memberships } = await supabase
     .from('circle_members')
-    .select('circle_id')
+    .select(`
+      circle_id,
+      circles (
+        id,
+        name
+      )
+    `)
     .eq('user_id', user.id)
-    .single()
 
-  if (!membership) {
+  if (!memberships || memberships.length === 0) {
     redirect('/home')
   }
 
+  // Determine which circle to use
+  const circles = memberships.map(m => ({
+    id: m.circle_id,
+    name: Array.isArray(m.circles) 
+      ? m.circles[0]?.name ?? 'Your Circle'
+      : ((m.circles as { name?: string } | null)?.name ?? 'Your Circle')
+  }))
+
+  const selectedCircle = selectedCircleId && circles.find(c => c.id === selectedCircleId)
+    ? circles.find(c => c.id === selectedCircleId)!
+    : circles[0]
+
+  const circleId = selectedCircle.id
+
   // Get past unlocked weeks grouped by month
-  const monthGroups = await getPastUnlockedWeeks(membership.circle_id, supabase)
+  const monthGroups = await getPastUnlockedWeeks(circleId, supabase)
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 md:p-24 pt-safe pb-safe">
       <div className="w-full max-w-2xl">
         <div className="mb-6 sm:mb-8">
           <Link
-            href="/home"
+            href={`/home${selectedCircleId ? `?circleId=${selectedCircleId}` : ''}`}
             className="text-gray-600 hover:text-gray-800 text-sm sm:text-base inline-flex items-center gap-2"
           >
             ← Back to Home
           </Link>
         </div>
+
+        {/* Circle Switcher */}
+        {circles.length > 1 && (
+          <div className="mb-6 sm:mb-8">
+            <CircleSwitcher circles={circles} currentCircleId={circleId} />
+          </div>
+        )}
 
         <div className="mb-6 sm:mb-8 text-center">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
@@ -47,7 +80,7 @@ export default async function ReviewPage() {
           </h1>
           {monthGroups.length > 0 && (
             <div className="flex justify-center">
-              <DownloadReflections userId={user.id} circleId={membership.circle_id} />
+              <DownloadReflections userId={user.id} circleId={circleId} />
             </div>
           )}
         </div>
@@ -72,7 +105,7 @@ export default async function ReviewPage() {
                   {group.weeks.map((week) => (
                     <Link
                       key={week.id}
-                      href={`/review/${week.id}`}
+                      href={`/review/${week.id}${selectedCircleId ? `?circleId=${selectedCircleId}` : ''}`}
                       className="block bg-white border border-gray-200 rounded-lg p-4 sm:p-5 hover:border-gray-300 hover:shadow-sm transition-all"
                     >
                       <div className="flex items-center justify-between">

@@ -9,8 +9,15 @@ import { MemberStatus } from './member-status'
 import { FlowerLogo } from '@/components/flower-logo'
 import { Rewind } from 'lucide-react'
 import Link from 'next/link'
+import { CircleSwitcher } from './circle-switcher'
 
-export default async function HomePage() {
+type HomePageProps = {
+  searchParams: Promise<{ circleId?: string }>
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const params = await searchParams
+  const selectedCircleId = params.circleId
   const supabase = await createClient()
 
   const {
@@ -21,23 +28,24 @@ export default async function HomePage() {
     redirect('/invite')
   }
 
-  // Get user's profile and circle info
+  // Get user's profile
   const { data: profile } = await supabase
     .from('profiles')
     .select('first_name')
     .eq('id', user.id)
     .single()
 
-  const { data: membership } = await supabase
+  // Get all user's circle memberships
+  const { data: memberships } = await supabase
     .from('circle_members')
     .select(`
       circle_id,
       circles (
+        id,
         name
       )
     `)
     .eq('user_id', user.id)
-    .single()
 
   // Get or create current week
   const currentWeek = await getCurrentWeek()
@@ -56,7 +64,7 @@ export default async function HomePage() {
     )
   }
 
-  if (!membership) {
+  if (!memberships || memberships.length === 0) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 md:p-24 pt-safe pb-safe">
         <div className="text-center w-full max-w-2xl">
@@ -68,10 +76,22 @@ export default async function HomePage() {
     )
   }
 
-  const circleId = membership.circle_id
-  const circleName = Array.isArray(membership.circles)
-    ? membership.circles[0]?.name ?? 'Your Circle'
-    : ((membership.circles as { name?: string } | null)?.name ?? 'Your Circle')
+  // Determine which circle to use
+  // If circleId is provided in URL, use it (if user is a member)
+  // Otherwise, use the first circle
+  const circles = memberships.map(m => ({
+    id: m.circle_id,
+    name: Array.isArray(m.circles) 
+      ? m.circles[0]?.name ?? 'Your Circle'
+      : ((m.circles as { name?: string } | null)?.name ?? 'Your Circle')
+  }))
+
+  const selectedCircle = selectedCircleId && circles.find(c => c.id === selectedCircleId)
+    ? circles.find(c => c.id === selectedCircleId)!
+    : circles[0]
+
+  const circleId = selectedCircle.id
+  const circleName = selectedCircle.name
 
   // Check if user has a reflection for current week
   const { data: reflection } = await supabase
@@ -204,7 +224,7 @@ export default async function HomePage() {
     <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 md:p-24 pt-safe pb-safe relative">
       {/* Review Reflections Button */}
       <Link 
-        href="/review"
+        href={`/review${selectedCircleId ? `?circleId=${selectedCircleId}` : ''}`}
         className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
       >
         <Rewind className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -212,6 +232,12 @@ export default async function HomePage() {
       </Link>
       
       <div className="text-center w-full max-w-2xl">
+        {/* Circle Switcher */}
+        {circles.length > 1 && (
+          <div className="mb-6 sm:mb-8">
+            <CircleSwitcher circles={circles} currentCircleId={circleId} />
+          </div>
+        )}
         {/* State: Mid-week joiner */}
         {homeState === 'midweek_joiner' && nextWeekStart ? (
           <div className="space-y-5 sm:space-y-6">

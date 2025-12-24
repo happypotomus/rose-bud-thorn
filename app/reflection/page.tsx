@@ -23,37 +23,41 @@ export default async function ReflectionPage() {
     redirect('/home')
   }
 
-  // Get user's circle membership
-  const { data: membership } = await supabase
+  // Get user's circle memberships
+  const { data: memberships } = await supabase
     .from('circle_members')
     .select('circle_id, created_at')
     .eq('user_id', user.id)
-    .single()
 
-  if (!membership) {
+  if (!memberships || memberships.length === 0) {
     redirect('/home')
   }
 
-  // Check if user joined mid-week (after the current week started)
-  const joinedMidWeek = await didUserJoinMidWeek(user.id, currentWeek.id)
+  // Check if user joined mid-week for ALL circles (after the current week started)
+  // If user joined mid-week in all circles, redirect to home
+  const joinedMidWeekChecks = await Promise.all(
+    memberships.map(m => didUserJoinMidWeek(user.id, currentWeek.id))
+  )
+  const allJoinedMidWeek = joinedMidWeekChecks.every(joined => joined)
 
-  if (joinedMidWeek) {
-    // User joined mid-week - redirect to home
+  if (allJoinedMidWeek) {
+    // User joined mid-week in all circles - redirect to home
     redirect('/home')
   }
 
-  // Check if user has already submitted a reflection for this week
+  // Check if user has already submitted a reflection for this week in ANY circle
+  const circleIds = memberships.map(m => m.circle_id)
   const { data: existingReflection } = await supabase
     .from('reflections')
     .select('id')
     .eq('user_id', user.id)
     .eq('week_id', currentWeek.id)
-    .eq('circle_id', membership.circle_id)
+    .in('circle_id', circleIds)
     .not('submitted_at', 'is', null)
     .maybeSingle()
 
   if (existingReflection) {
-    // User has already submitted - redirect to home
+    // User has already submitted for this week - redirect to home
     redirect('/home')
   }
 
@@ -61,7 +65,6 @@ export default async function ReflectionPage() {
   return (
     <ReflectionForm 
       weekId={currentWeek.id}
-      circleId={membership.circle_id}
       userId={user.id}
     />
   )
