@@ -43,7 +43,7 @@ export function CircleSwitcher({ circles, currentCircleId }: CircleSwitcherProps
   const selectedCircle = circles.find(c => c.id === selectedCircleId) || circles[0]
 
   return (
-    <div className="w-full flex justify-center pt-6 px-6 mb-6">
+    <div className="w-full flex justify-center pt-12 px-6 mb-6">
       <div className="relative inline-block">
         <select
           value={selectedCircleId}
