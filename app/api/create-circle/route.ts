@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { generateInviteLink } from '@/lib/utils/invite-link'
-import { randomUUID } from 'crypto'
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,8 +41,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate unique invite token
-    const inviteToken = randomUUID()
+    // Generate invite token from circle name: lowercase, no spaces, combined
+    const inviteToken = name.trim().toLowerCase().replace(/\s+/g, '')
+
+    // Check if a circle with this invite_token already exists
+    const { data: existingCircle } = await supabase
+      .from('circles')
+      .select('id')
+      .eq('invite_token', inviteToken)
+      .single()
+
+    if (existingCircle) {
+      return NextResponse.json(
+        { error: 'A circle with this name already exists. Please choose a different name.' },
+        { status: 400 }
+      )
+    }
 
     // Create the circle
     const { data: circle, error: circleError } = await supabase
@@ -68,21 +80,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate invite link with correct base URL
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://rose-bud-thorn.vercel.app')
-    
-    const inviteLink = generateInviteLink(inviteToken, baseUrl)
-
-    // Update circle with invite_link
-    const { error: updateError } = await supabase
+    // Fetch the circle again to get the invite_link (set by database trigger)
+    const { data: circleWithLink, error: fetchError } = await supabase
       .from('circles')
-      .update({ invite_link: inviteLink })
+      .select('id, name, invite_token, invite_link, circle_owner, created_at')
       .eq('id', circle.id)
+      .single()
 
-    if (updateError) {
-      console.error('Failed to update invite_link:', updateError)
-      // Continue anyway - the trigger should have set it
+    if (fetchError || !circleWithLink) {
+      console.error('Failed to fetch circle with invite_link:', fetchError)
+      return NextResponse.json(
+        { 
+          error: 'Failed to retrieve invite link',
+          details: fetchError?.message || 'Unknown error',
+        },
+        { status: 500 }
+      )
     }
 
     // Add creator as a member of the circle
@@ -103,8 +116,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       circle: {
-        ...circle,
-        invite_link: inviteLink,
+        ...circleWithLink,
       },
     })
   } catch (error) {
