@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { ChevronDown } from 'lucide-react'
 
 type Circle = {
   id: string
@@ -39,23 +40,29 @@ export function CircleSwitcher({ circles, currentCircleId }: CircleSwitcherProps
     return null
   }
 
+  const selectedCircle = circles.find(c => c.id === selectedCircleId) || circles[0]
+
   return (
-    <div className="mb-6 sm:mb-8">
-      <label htmlFor="circle-select" className="block text-sm font-medium text-gray-700 mb-2">
-        Select Circle
-      </label>
-      <select
-        id="circle-select"
-        value={selectedCircleId}
-        onChange={(e) => handleCircleChange(e.target.value)}
-        className="w-full sm:w-auto min-w-[200px] px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg bg-white text-base sm:text-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-      >
-        {circles.map((circle) => (
-          <option key={circle.id} value={circle.id}>
-            {circle.name}
-          </option>
-        ))}
-      </select>
+    <div className="w-full flex justify-center pt-16 px-6">
+      <div className="relative inline-block">
+        <select
+          value={selectedCircleId}
+          onChange={(e) => handleCircleChange(e.target.value)}
+          className="w-auto min-w-[140px] h-9 px-3 pr-8 text-sm font-medium text-black bg-gray-100/50 rounded-md border-0 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-0 transition-all hover:bg-gray-100/70"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2 4L6 8L10 4' stroke='%23000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'right 0.5rem center',
+            paddingRight: '2rem',
+          }}
+        >
+          {circles.map((circle) => (
+            <option key={circle.id} value={circle.id}>
+              {circle.name}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   )
 }

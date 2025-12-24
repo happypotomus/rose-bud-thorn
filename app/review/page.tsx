@@ -69,9 +69,7 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
 
         {/* Circle Switcher */}
         {circles.length > 1 && (
-          <div className="mb-6 sm:mb-8">
-            <CircleSwitcher circles={circles} currentCircleId={circleId} />
-          </div>
+          <CircleSwitcher circles={circles} currentCircleId={circleId} />
         )}
 
         <div className="mb-6 sm:mb-8 text-center">

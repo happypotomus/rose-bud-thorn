@@ -257,9 +257,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <div className="text-center w-full max-w-2xl">
         {/* Circle Switcher */}
         {circles.length > 1 && (
-          <div className="mb-6 sm:mb-8">
-            <CircleSwitcher circles={circles} currentCircleId={circleId} />
-          </div>
+          <CircleSwitcher circles={circles} currentCircleId={circleId} />
         )}
         {/* State: Mid-week joiner */}
         {homeState === 'midweek_joiner' && nextWeekStart ? (
