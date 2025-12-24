@@ -76,11 +76,17 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
             Review Reflections
           </h1>
-          {monthGroups.length > 0 && (
-            <div className="flex justify-center">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+            <Link
+              href="/review/my-reflections?page=1"
+              className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium text-sm sm:text-base transition-colors"
+            >
+              Review all your reflections
+            </Link>
+            {monthGroups.length > 0 && (
               <DownloadReflections userId={user.id} circleId={circleId} />
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {monthGroups.length === 0 ? (
