@@ -75,7 +75,7 @@ Users read each other's reflections sequentially
 - **Supabase** (PostgreSQL database)
   - Auth (phone OTP via Twilio Verify)
   - Row Level Security (RLS) policies
-  - Storage (for audio files)
+  - Storage (for audio files and photos)
   - Edge Functions (for cron jobs)
   - Postgres Functions (for week logic)
 - **Twilio** (SMS sending)
@@ -203,6 +203,8 @@ Users read each other's reflections sequentially
 - `rose_transcript` (TEXT, nullable) → GPT-cleaned transcript
 - `bud_transcript` (TEXT, nullable)
 - `thorn_transcript` (TEXT, nullable)
+- `photo_url` (TEXT, nullable) → Supabase Storage URL for optional photo
+- `photo_caption` (TEXT, nullable) → Optional caption for photo
 - `submitted_at` (TIMESTAMPTZ, nullable) → NULL = draft, timestamp = submitted
 
 **Relationships**:
@@ -212,7 +214,7 @@ Users read each other's reflections sequentially
 
 **Key Constraint**: `UNIQUE(user_id, circle_id, week_id)` → One reflection per user per circle per week
 
-**Design Decision**: Text and audio are nullable because users can submit text-only, audio-only, or both.
+**Design Decision**: Text and audio are nullable because users can submit text-only, audio-only, or both. Photo is optional and can be added to any reflection regardless of text/audio content.
 
 ---
 
@@ -508,18 +510,20 @@ User clicks "Start Reflection"
   - Gets user's circle
   ↓
 [Client] reflection-form.tsx renders:
-  - 3-step wizard: Rose → Bud → Thorn → Review
+  - 5-step wizard: Rose → Bud → Thorn → Photo (optional) → Review
   - Draft saved to localStorage: reflection_draft_${weekId}
   ↓
-User completes form (text + optional audio)
+User completes form (text + optional audio + optional photo)
   ↓
 User clicks "Submit"
   ↓
 [Client] reflection-form.tsx:
   1. Uploads audio files to Supabase Storage (if any)
-  2. Inserts reflection into database:
+  2. Uploads photo to Supabase Storage (if provided)
+  3. Inserts reflection into database:
      - rose_text, bud_text, thorn_text
      - rose_audio_url, bud_audio_url, thorn_audio_url
+     - photo_url, photo_caption (if photo uploaded)
      - submitted_at = NOW()
   3. Clears localStorage draft
   4. Fire-and-forget: POST /api/send-unlock-sms
@@ -932,8 +936,8 @@ app/[page]/[component].tsx (Client Component)
 **Purpose**: Multi-step reflection wizard
 
 **State Management**:
-- `currentStep`: `'rose' | 'bud' | 'thorn' | 'review'`
-- `draft`: Reflection data (text + audio URLs)
+- `currentStep`: `'rose' | 'bud' | 'thorn' | 'photo' | 'review'`
+- `draft`: Reflection data (text + audio URLs + photo URL/caption)
 - `loading`: Submission state
 - `error`: Error messages
 
@@ -944,11 +948,21 @@ app/[page]/[component].tsx (Client Component)
 
 **Submission Flow**:
 1. Upload audio files (if any) → Supabase Storage
-2. Insert reflection → database
-3. Fire-and-forget unlock SMS check
-4. Fire-and-forget transcription (if audio)
-5. Clear localStorage
-6. Redirect to `/home`
+2. Upload photo (if provided) → Supabase Storage `photos` bucket
+3. Insert reflection → database (includes photo_url and photo_caption if photo exists)
+4. Fire-and-forget unlock SMS check
+5. Fire-and-forget transcription (if audio)
+6. Clear localStorage
+7. Redirect to `/home`
+
+**Photo Upload**:
+- Optional step after Thorn, before Review
+- Single photo per reflection (not multiple)
+- Caption is optional even if photo is uploaded
+- File validation: JPEG, PNG, WebP, GIF (max 5MB)
+- Storage path: `{userId}/{weekId}/photo_{timestamp}.{ext}`
+- Auto-upload on file selection
+- Preview shown before submission
 
 ---
 
@@ -1074,8 +1088,9 @@ app/[page]/[component].tsx (Client Component)
 - Each reflection in a card with Rose/Bud/Thorn sections
 - Own reflection marked with "(You)" label
 - Audio playback and transcript toggles
+- Photo display (if photo_url exists) with caption below
 - CommentSection component below each reflection
-- "Copy Reflection to Clipboard" button only on own reflection
+- "Copy Reflection to Clipboard" button only on own reflection (includes photo URL and caption)
 - Real-time comment refresh after adding new comments
 
 **State Management**:
@@ -1110,6 +1125,50 @@ app/[page]/[component].tsx (Client Component)
 **Callbacks**:
 - `onAudioUploaded(url)`: Called when upload succeeds
 - `onDiscard()`: Called when user discards recording
+
+---
+
+#### `components/photo-uploader.tsx`
+**Type**: Client Component
+
+**Purpose**: Upload and preview photos for reflections
+
+**Features**:
+- File input with image type validation (JPEG, PNG, WebP, GIF)
+- File size validation (max 5MB)
+- Image preview before upload
+- Optional caption input field
+- Auto-upload on file selection
+- Upload progress indicator
+- Error handling with user-friendly messages
+- Discard/remove photo option
+
+**Props**:
+- `onPhotoUploaded: (url: string, caption: string) => void` - Called when photo uploads successfully
+- `onDiscard: () => void` - Called when user removes photo
+- `existingPhotoUrl?: string | null` - For editing existing photos
+- `existingCaption?: string | null` - For editing existing captions
+- `userId: string` - For storage path generation
+- `weekId: string` - For storage path generation
+
+**State Management**:
+- `photoUrl`: Current photo URL (preview or uploaded)
+- `caption`: Caption text
+- `uploading`: Upload in progress flag
+- `error`: Error message if upload fails
+
+**Storage Path**: `{userId}/{weekId}/photo_{timestamp}.{ext}`
+
+**Storage Bucket**: `photos` (public bucket)
+
+**Validation**:
+- Allowed types: `image/jpeg`, `image/jpg`, `image/png`, `image/webp`, `image/gif`
+- Max file size: 5MB (5242880 bytes)
+- Error messages for invalid files or missing bucket
+
+**Callbacks**:
+- `onPhotoUploaded(url, caption)`: Called when upload succeeds (includes caption)
+- `onDiscard()`: Called when user removes photo
 
 ---
 
@@ -1529,9 +1588,13 @@ export async function POST(request: NextRequest) {
 - **Functions**: Postgres RPC functions for complex logic
 
 #### Storage
-- **Bucket**: `reflection-audio` (private)
-- **Path Pattern**: `{userId}/{weekId}/{section}.webm`
-- **Policies**: Users can upload to own folder, all authenticated users can read
+- **Audio Bucket**: `audio` (public)
+  - **Path Pattern**: `{userId}/{weekId}/{section}.webm`
+  - **Policies**: Users can upload to own folder, all authenticated users can read
+- **Photo Bucket**: `photos` (public)
+  - **Path Pattern**: `{userId}/{weekId}/photo_{timestamp}.{ext}`
+  - **Policies**: Users can upload to own folder, all authenticated users can read
+  - **File Limits**: Max 5MB, types: JPEG, PNG, WebP, GIF
 
 #### Edge Functions
 - **Language**: Deno (TypeScript)
@@ -2048,6 +2111,46 @@ const profileMap = new Map(profiles.map(p => [p.id, p.first_name]))
 - `app/api/create-circle/route.ts` - Creation API
 - `app/home/hamburger-menu.tsx` - Navigation to creation page
 
+---
+
+### 15.3 Photo Upload Feature ✅ IMPLEMENTED
+
+**Status**: Fully implemented
+
+**Features**:
+- Optional photo upload step in reflection form (after Thorn, before Review)
+- Single photo per reflection (not multiple)
+- Optional caption for photo
+- Photo displayed in review pages and historical reflections
+- Photo URL and caption included in copy-to-clipboard export
+- Photo included in reflection download export
+
+**Database Changes**:
+- Added `photo_url` (TEXT, nullable) to `reflections` table
+- Added `photo_caption` (TEXT, nullable) to `reflections` table
+- Migration: `20250121000024_add_photo_fields.sql`
+
+**Storage Setup**:
+- Created `photos` bucket (public, 5MB limit)
+- Storage policies for upload, read, delete, update
+- Migration: `20250121000025_setup_photo_storage.sql`
+- Setup script: `scripts/setup-photo-storage.ts`
+
+**Files**:
+- `components/photo-uploader.tsx` - Photo upload component
+- `app/reflection/reflection-form.tsx` - Updated to include photo step
+- `app/review/[weekId]/review-display.tsx` - Displays photos in reviews
+- `app/read/read-content.tsx` - Displays photos in reading flow
+- `lib/utils/export-reflection.ts` - Includes photo in exports
+
+**Key Implementation Details**:
+- Photo step is optional - users can skip
+- File validation: JPEG, PNG, WebP, GIF (max 5MB)
+- Storage path: `{userId}/{weekId}/photo_{timestamp}.{ext}`
+- Auto-upload on file selection
+- Preview shown before submission
+- Photos displayed after Thorn section in all views
+
 **Database**:
 - RLS policies allow authenticated users to create circles
 - RLS policies allow users to view circles they own
@@ -2102,9 +2205,15 @@ const profileMap = new Map(profiles.map(p => [p.id, p.first_name]))
 - Verify phone number normalization is working
 
 **Audio upload fails**:
-- Check Storage bucket exists: `reflection-audio`
+- Check Storage bucket exists: `audio`
 - Verify Storage policies allow upload
 - Check file size limits
+
+**Photo upload fails**:
+- Check Storage bucket exists: `photos`
+- Verify Storage policies allow upload (run migration: `20250121000025_setup_photo_storage.sql`)
+- Check file size limits (max 5MB)
+- Verify file type is allowed (JPEG, PNG, WebP, GIF)
 
 ---
 
