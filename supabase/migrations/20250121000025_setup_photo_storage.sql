@@ -1,5 +1,12 @@
 -- Setup Storage bucket and policies for photo uploads
 -- Similar to audio storage setup
+-- This migration is idempotent - safe to run multiple times
+
+-- Drop existing policies if they exist (to allow re-running this migration)
+DROP POLICY IF EXISTS "Users can upload their own photos" ON storage.objects;
+DROP POLICY IF EXISTS "Users can read photos" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete their own photos" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update their own photos" ON storage.objects;
 
 -- Policy 1: Allow authenticated users to upload their own photos
 -- Users can only upload to their own folder: {userId}/{weekId}/...

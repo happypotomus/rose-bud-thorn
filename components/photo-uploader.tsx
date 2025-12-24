@@ -69,6 +69,15 @@ export function PhotoUploader({
         })
 
       if (uploadError) {
+        console.error('Photo upload error details:', {
+          message: uploadError.message,
+          statusCode: uploadError.statusCode,
+          error: uploadError,
+        })
+        // Provide more specific error message
+        if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('does not exist')) {
+          throw new Error('Photos storage bucket not found. Please contact support.')
+        }
         throw uploadError
       }
 
@@ -87,9 +96,12 @@ export function PhotoUploader({
       setPhotoUrl(urlData.publicUrl)
       setUploading(false)
       onPhotoUploaded(urlData.publicUrl, caption)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error uploading photo:', err)
-      setError('We couldn\'t upload your photo. Please try again.')
+      const errorMessage = err?.message?.includes('Bucket not found') || err?.message?.includes('does not exist')
+        ? 'Photos storage bucket not configured. Please contact support.'
+        : err?.message || 'We couldn\'t upload your photo. Please try again.'
+      setError(errorMessage)
       setUploading(false)
       setPhotoUrl(null)
       URL.revokeObjectURL(previewUrl)

@@ -287,12 +287,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               Take a moment to reflect on your week.
             </p>
             <div className="pt-2 sm:pt-4">
-              <a
+              <Link
                 href="/reflection"
                 className="inline-block bg-rose text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg hover:bg-rose-dark active:bg-rose-dark font-medium text-base sm:text-lg transition-colors touch-manipulation min-h-[44px] flex items-center justify-center"
               >
                 Start Reflection
-              </a>
+              </Link>
             </div>
             {memberStatus.length > 0 && (
               <div className="pt-2 sm:pt-4">
