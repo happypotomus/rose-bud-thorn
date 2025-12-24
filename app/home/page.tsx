@@ -36,7 +36,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     .single()
 
   // Get all user's circle memberships
-  const { data: memberships } = await supabase
+  const { data: memberships, error: membershipsError } = await supabase
     .from('circle_members')
     .select(`
       circle_id,
@@ -46,6 +46,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       )
     `)
     .eq('user_id', user.id)
+
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Home] Memberships:', memberships)
+    console.log('[Home] Memberships error:', membershipsError)
+    console.log('[Home] Memberships count:', memberships?.length)
+  }
 
   // Get or create current week
   const currentWeek = await getCurrentWeek()
@@ -79,12 +86,25 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // Determine which circle to use
   // If circleId is provided in URL, use it (if user is a member)
   // Otherwise, use the first circle
-  const circles = memberships.map(m => ({
-    id: m.circle_id,
-    name: Array.isArray(m.circles) 
+  const circles = memberships.map(m => {
+    const circleName = Array.isArray(m.circles) 
       ? m.circles[0]?.name ?? 'Your Circle'
       : ((m.circles as { name?: string } | null)?.name ?? 'Your Circle')
-  }))
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Home] Processing membership:', { circle_id: m.circle_id, circles: m.circles, circleName })
+    }
+    
+    return {
+      id: m.circle_id,
+      name: circleName
+    }
+  })
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Home] Final circles array:', circles)
+    console.log('[Home] Circles count:', circles.length)
+  }
 
   const selectedCircle = selectedCircleId && circles.find(c => c.id === selectedCircleId)
     ? circles.find(c => c.id === selectedCircleId)!
