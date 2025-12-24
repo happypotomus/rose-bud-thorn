@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { AudioRecorder } from '@/components/audio-recorder'
+import { PhotoUploader } from '@/components/photo-uploader'
 import { FlowerLogo } from '@/components/flower-logo'
 
 type ReflectionDraft = {
@@ -13,11 +14,13 @@ type ReflectionDraft = {
   rose_audio_url?: string | null
   bud_audio_url?: string | null
   thorn_audio_url?: string | null
+  photo_url?: string | null
+  photo_caption?: string | null
 }
 
-type Step = 'rose' | 'bud' | 'thorn' | 'review'
+type Step = 'rose' | 'bud' | 'thorn' | 'photo' | 'review'
 
-const steps: Step[] = ['rose', 'bud', 'thorn', 'review']
+const steps: Step[] = ['rose', 'bud', 'thorn', 'photo', 'review']
 
 type ReflectionFormProps = {
   weekId: string
@@ -38,6 +41,8 @@ export function ReflectionForm({ weekId, userId }: ReflectionFormProps) {
     rose_audio_url: null,
     bud_audio_url: null,
     thorn_audio_url: null,
+    photo_url: null,
+    photo_caption: null,
   })
 
   // Load draft from localStorage
@@ -75,6 +80,14 @@ export function ReflectionForm({ weekId, userId }: ReflectionFormProps) {
     updateAudioUrl(section, null)
   }
 
+  const updatePhoto = (url: string | null, caption: string) => {
+    setDraft(prev => ({ ...prev, photo_url: url, photo_caption: caption }))
+  }
+
+  const handleDiscardPhoto = () => {
+    setDraft(prev => ({ ...prev, photo_url: null, photo_caption: null }))
+  }
+
   const canProceed = (step: Step): boolean => {
     switch (step) {
       case 'rose':
@@ -84,6 +97,9 @@ export function ReflectionForm({ weekId, userId }: ReflectionFormProps) {
         return draft.bud.trim().length > 0 || !!draft.bud_audio_url
       case 'thorn':
         return draft.thorn.trim().length > 0 || !!draft.thorn_audio_url
+      case 'photo':
+        // Photo step is optional, always allow proceeding
+        return true
       default:
         return false
     }
@@ -92,7 +108,7 @@ export function ReflectionForm({ weekId, userId }: ReflectionFormProps) {
   const handleNext = () => {
     if (!canProceed(currentStep)) return
 
-    const steps: Step[] = ['rose', 'bud', 'thorn', 'review']
+    const steps: Step[] = ['rose', 'bud', 'thorn', 'photo', 'review']
     const currentIndex = steps.indexOf(currentStep)
     if (currentIndex < steps.length - 1) {
       setCurrentStep(steps[currentIndex + 1])
@@ -100,7 +116,7 @@ export function ReflectionForm({ weekId, userId }: ReflectionFormProps) {
   }
 
   const handleBack = () => {
-    const steps: Step[] = ['rose', 'bud', 'thorn', 'review']
+    const steps: Step[] = ['rose', 'bud', 'thorn', 'photo', 'review']
     const currentIndex = steps.indexOf(currentStep)
     if (currentIndex > 0) {
       setCurrentStep(steps[currentIndex - 1])
@@ -155,6 +171,8 @@ export function ReflectionForm({ weekId, userId }: ReflectionFormProps) {
         rose_audio_url: draft.rose_audio_url || null,
         bud_audio_url: draft.bud_audio_url || null,
         thorn_audio_url: draft.thorn_audio_url || null,
+        photo_url: draft.photo_url || null,
+        photo_caption: draft.photo_caption || null,
         submitted_at: submittedAt,
       }
 
@@ -235,6 +253,7 @@ export function ReflectionForm({ weekId, userId }: ReflectionFormProps) {
     rose: 'Rose',
     bud: 'Bud',
     thorn: 'Thorn',
+    photo: 'Photo of the week',
     review: 'Review',
   }
 
@@ -242,6 +261,7 @@ export function ReflectionForm({ weekId, userId }: ReflectionFormProps) {
     rose: 'What went well this week?',
     bud: 'Something emerging or full of potential?',
     thorn: 'Something challenging during the week?',
+    photo: 'Share a photo from your week (optional)',
     review: 'Review your reflection before submitting',
   }
 
@@ -326,6 +346,83 @@ export function ReflectionForm({ weekId, userId }: ReflectionFormProps) {
                   <audio src={draft.thorn_audio_url} controls className="w-full" />
                 )}
               </div>
+              {draft.photo_url && (
+                <div className="mt-6">
+                  <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4 flex items-center gap-2">
+                    <span className="text-2xl sm:text-3xl">📷</span>
+                    Photo of the week
+                  </h3>
+                  <div className="space-y-2">
+                    <img
+                      src={draft.photo_url}
+                      alt={draft.photo_caption || "Photo of the week"}
+                      className="w-full max-w-md mx-auto rounded-lg border border-gray-200"
+                    />
+                    {draft.photo_caption && (
+                      <p className="text-gray-600 text-sm italic text-center">
+                        {draft.photo_caption}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Photo step */}
+        {currentStep === 'photo' && (
+          <div className="text-center space-y-6 sm:space-y-8">
+            {/* Step icon */}
+            <div className="flex justify-center">
+              <span className="text-5xl sm:text-6xl md:text-7xl">📷</span>
+            </div>
+
+            {/* Step title */}
+            <h2 className="text-2xl sm:text-3xl font-bold text-rose">{stepTitles.photo}</h2>
+
+            {/* Question prompt */}
+            <p className="text-xl sm:text-2xl md:text-3xl font-bold text-black">
+              {stepDescriptions.photo}
+            </p>
+
+            {/* Photo uploader */}
+            {userId && weekId && (
+              <div className="flex justify-center">
+                <PhotoUploader
+                  onPhotoUploaded={(url, caption) => updatePhoto(url, caption)}
+                  onDiscard={handleDiscardPhoto}
+                  existingPhotoUrl={draft.photo_url || null}
+                  existingCaption={draft.photo_caption || null}
+                  userId={userId}
+                  weekId={weekId}
+                />
+              </div>
+            )}
+
+            {/* Navigation buttons */}
+            <div className="flex flex-row gap-3 sm:gap-4">
+              <button
+                onClick={handleBack}
+                disabled={loading}
+                className="flex-1 px-6 sm:px-8 py-3 sm:py-3 text-base sm:text-lg border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors touch-manipulation min-h-[44px] flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back
+              </button>
+              
+              <button
+                onClick={handleNext}
+                disabled={loading}
+                className="flex-1 bg-rose text-white py-3 sm:py-3.5 rounded-lg hover:bg-rose-dark active:bg-rose-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base sm:text-lg transition-colors touch-manipulation min-h-[44px] flex items-center justify-center gap-2"
+              >
+                {draft.photo_url ? 'Next' : 'Skip'}
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           </div>
         )}

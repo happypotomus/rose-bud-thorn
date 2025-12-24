@@ -23,6 +23,8 @@ type FriendReflection = {
   rose_transcript: string | null
   bud_transcript: string | null
   thorn_transcript: string | null
+  photo_url: string | null
+  photo_caption: string | null
 }
 
 type Comment = {
@@ -131,7 +133,9 @@ export function ReadContent() {
             thorn_audio_url,
             rose_transcript,
             bud_transcript,
-            thorn_transcript
+            thorn_transcript,
+            photo_url,
+            photo_caption
           `)
           .eq('circle_id', selectedCircleId)
           .eq('week_id', week.id)
@@ -176,6 +180,8 @@ export function ReadContent() {
             rose_transcript: r.rose_transcript || null,
             bud_transcript: r.bud_transcript || null,
             thorn_transcript: r.thorn_transcript || null,
+            photo_url: r.photo_url || null,
+            photo_caption: r.photo_caption || null,
           }))
           .sort((a, b) => a.first_name.localeCompare(b.first_name))
 
@@ -469,6 +475,23 @@ export function ReadContent() {
                 </div>
               )}
             </div>
+
+            {/* Photo Section */}
+            {currentFriend.photo_url && (
+              <div className="mt-6 space-y-2">
+                <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4">📷 Photo of the week</h3>
+                <img
+                  src={currentFriend.photo_url}
+                  alt={currentFriend.photo_caption || "Photo of the week"}
+                  className="w-full max-w-md mx-auto rounded-lg border border-gray-200"
+                />
+                {currentFriend.photo_caption && (
+                  <p className="text-gray-600 text-sm italic text-center mt-2">
+                    {currentFriend.photo_caption}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Comments Section */}

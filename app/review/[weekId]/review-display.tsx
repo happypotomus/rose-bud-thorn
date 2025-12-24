@@ -19,6 +19,8 @@ type ReflectionWithAuthor = {
   rose_transcript: string | null
   bud_transcript: string | null
   thorn_transcript: string | null
+  photo_url: string | null
+  photo_caption: string | null
   submitted_at: string | null
 }
 
@@ -333,6 +335,23 @@ export function ReviewDisplay({
                     )}
                   </div>
                 </div>
+
+                {/* Photo Section */}
+                {reflection.photo_url && (
+                  <div className="mt-6 space-y-2">
+                    <h3 className="font-semibold text-lg sm:text-xl mb-3 sm:mb-4">📷 Photo of the week</h3>
+                    <img
+                      src={reflection.photo_url}
+                      alt={reflection.photo_caption || "Photo of the week"}
+                      className="w-full max-w-md mx-auto rounded-lg border border-gray-200"
+                    />
+                    {reflection.photo_caption && (
+                      <p className="text-gray-600 text-sm italic text-center mt-2">
+                        {reflection.photo_caption}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Comments Section */}
                 <CommentSection

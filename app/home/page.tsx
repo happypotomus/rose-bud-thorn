@@ -130,7 +130,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       thorn_transcript,
       rose_audio_url,
       bud_audio_url,
-      thorn_audio_url
+      thorn_audio_url,
+      photo_url,
+      photo_caption
     `)
     .eq('user_id', user.id)
     .eq('circle_id', circleId)
@@ -227,6 +229,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     rose_audio_url: reflection.rose_audio_url && reflection.rose_audio_url.trim().length > 0 ? reflection.rose_audio_url.trim() : null,
     bud_audio_url: reflection.bud_audio_url && reflection.bud_audio_url.trim().length > 0 ? reflection.bud_audio_url.trim() : null,
     thorn_audio_url: reflection.thorn_audio_url && reflection.thorn_audio_url.trim().length > 0 ? reflection.thorn_audio_url.trim() : null,
+    photo_url: reflection.photo_url && reflection.photo_url.trim().length > 0 ? reflection.photo_url.trim() : null,
+    photo_caption: reflection.photo_caption && reflection.photo_caption.trim().length > 0 ? reflection.photo_caption.trim() : null,
     submitted_at: reflection.submitted_at ?? null,
   } : null
 

@@ -131,6 +131,8 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
             rose_transcript,
             bud_transcript,
             thorn_transcript,
+            photo_url,
+            photo_caption,
             submitted_at
           `)
           .eq('user_id', userId)
@@ -217,6 +219,8 @@ export function DownloadReflections({ userId, circleId }: DownloadReflectionsPro
           rose_audio_url: reflection.rose_audio_url,
           bud_audio_url: reflection.bud_audio_url,
           thorn_audio_url: reflection.thorn_audio_url,
+          photo_url: reflection.photo_url,
+          photo_caption: reflection.photo_caption,
           submitted_at: reflection.submitted_at,
         }
 

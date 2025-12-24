@@ -117,6 +117,8 @@ export default async function WeekReviewPage({
       rose_transcript,
       bud_transcript,
       thorn_transcript,
+      photo_url,
+      photo_caption,
       submitted_at
     `)
     .eq('circle_id', circleId)
@@ -158,6 +160,8 @@ export default async function WeekReviewPage({
       rose_transcript: r.rose_transcript,
       bud_transcript: r.bud_transcript,
       thorn_transcript: r.thorn_transcript,
+      photo_url: r.photo_url,
+      photo_caption: r.photo_caption,
       submitted_at: r.submitted_at,
     }))
     .sort((a, b) => a.first_name.localeCompare(b.first_name))

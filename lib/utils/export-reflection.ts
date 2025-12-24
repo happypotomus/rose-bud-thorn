@@ -12,6 +12,8 @@ export type ReflectionData = {
   rose_audio_url?: string | null
   bud_audio_url?: string | null
   thorn_audio_url?: string | null
+  photo_url?: string | null
+  photo_caption?: string | null
   submitted_at: string | null
 }
 
@@ -110,6 +112,17 @@ export function formatReflectionAsText(
   output += '-'.repeat(30) + '\n'
   output += (thorn || '(No response)') + '\n\n'
 
+  // Photo section (if exists)
+  if (reflection.photo_url) {
+    output += '📷 Photo of the week\n'
+    output += '-'.repeat(30) + '\n'
+    output += `Photo URL: ${reflection.photo_url}\n`
+    if (reflection.photo_caption) {
+      output += `Caption: ${reflection.photo_caption}\n`
+    }
+    output += '\n'
+  }
+
   return output.trim()
 }
 
@@ -147,6 +160,15 @@ export function formatReflectionAsMarkdown(
   // Thorn section
   output += '## 🌵 Thorn\n\n'
   output += (thorn || '(No response)') + '\n\n'
+
+  // Photo section (if exists)
+  if (reflection.photo_url) {
+    output += '## 📷 Photo of the week\n\n'
+    output += `![Photo](${reflection.photo_url})\n\n`
+    if (reflection.photo_caption) {
+      output += `*${reflection.photo_caption}*\n\n`
+    }
+  }
 
   return output.trim()
 }
