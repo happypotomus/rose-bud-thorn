@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     // Verify that the reflection belongs to the current user
     const { data: reflection, error: reflectionError } = await supabase
       .from('reflections')
-      .select('user_id, rose_audio_url, bud_audio_url, thorn_audio_url')
+      .select('user_id, week_id, rose_audio_url, bud_audio_url, thorn_audio_url')
       .eq('id', reflectionId)
       .single()
 
@@ -136,12 +136,39 @@ export async function POST(request: NextRequest) {
     // Wait for all transcriptions to complete
     await Promise.all(transcriptionPromises)
 
-    // Update the reflection with transcripts (only update fields that were transcribed)
+    // Update ALL reflections for this user/week with transcripts
+    // Since reflections are inserted into multiple circles, we need to update all of them
     if (Object.keys(updates).length > 0) {
+      // Find all reflections for this user/week (they're identical across circles)
+      const { data: allReflectionsForWeek, error: findError } = await supabase
+        .from('reflections')
+        .select('id')
+        .eq('user_id', reflection.user_id)
+        .eq('week_id', reflection.week_id)
+        .not('submitted_at', 'is', null)
+
+      if (findError) {
+        console.error('Error finding reflections to update:', findError)
+        return NextResponse.json(
+          { error: 'Failed to find reflections to update', details: findError.message },
+          { status: 500 }
+        )
+      }
+
+      if (!allReflectionsForWeek || allReflectionsForWeek.length === 0) {
+        console.error('No reflections found for user/week')
+        return NextResponse.json(
+          { error: 'No reflections found to update' },
+          { status: 404 }
+        )
+      }
+
+      // Update all reflections with the same transcripts
+      const allReflectionIds = allReflectionsForWeek.map(r => r.id)
       const { error: updateError } = await supabase
         .from('reflections')
         .update(updates)
-        .eq('id', reflectionId)
+        .in('id', allReflectionIds)
 
       if (updateError) {
         console.error('Error updating transcripts:', updateError)
