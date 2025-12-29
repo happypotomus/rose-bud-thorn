@@ -75,11 +75,11 @@ Deno.serve(async (req) => {
       )
     }
 
-    const results = []
-    let totalSent = 0
-    let totalErrors = 0
+    // Step 1: Collect all unique users across all circles who joined before week start
+    const weekStart = new Date(currentWeek.start_at)
+    const uniqueUserIds = new Set<string>()
+    const userToFirstCircle = new Map<string, { id: string; name: string }>()
 
-    // For each circle, find members who haven't submitted
     for (const circle of circles) {
       // Get all members of this circle with their join time
       const { data: members, error: membersError } = await supabase
@@ -89,7 +89,6 @@ Deno.serve(async (req) => {
 
       if (membersError) {
         console.error(`Error fetching members for circle ${circle.id}:`, membersError)
-        totalErrors++
         continue
       }
 
@@ -99,131 +98,168 @@ Deno.serve(async (req) => {
 
       // Filter to only members who joined before or at the week start
       // Mid-week joiners should not receive reminders for the current week
-      const weekStart = new Date(currentWeek.start_at)
       const preWeekMembers = members.filter(
         m => new Date(m.created_at) <= weekStart
       )
 
-      if (preWeekMembers.length === 0) {
-        continue // No members were present at week start
+      // Add unique user IDs and track first circle for each user
+      for (const member of preWeekMembers) {
+        if (!uniqueUserIds.has(member.user_id)) {
+          uniqueUserIds.add(member.user_id)
+          userToFirstCircle.set(member.user_id, { id: circle.id, name: circle.name })
+        }
       }
+    }
 
-      const userIds = preWeekMembers.map(m => m.user_id)
+    if (uniqueUserIds.size === 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          weekId: currentWeek.id,
+          totalSent: 0,
+          totalErrors: 0,
+          message: 'No users found who should receive reminders',
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-      // Get reflections for this week and circle
-      const { data: reflections, error: reflectionsError } = await supabase
-        .from('reflections')
-        .select('user_id')
-        .eq('circle_id', circle.id)
-        .eq('week_id', currentWeek.id)
-        .not('submitted_at', 'is', null)
+    // Step 2: Get all submitted reflections for current week (across all circles)
+    // Since reflections are the same across circles, we can check if user has submitted in any circle
+    const { data: allReflections, error: reflectionsError } = await supabase
+      .from('reflections')
+      .select('user_id')
+      .eq('week_id', currentWeek.id)
+      .not('submitted_at', 'is', null)
+      .in('user_id', Array.from(uniqueUserIds))
 
-      if (reflectionsError) {
-        console.error(`Error fetching reflections for circle ${circle.id}:`, reflectionsError)
-        totalErrors++
+    if (reflectionsError) {
+      throw new Error(`Failed to fetch reflections: ${reflectionsError.message}`)
+    }
+
+    // Step 3: Find users who haven't submitted
+    const submittedUserIds = new Set((allReflections || []).map(r => r.user_id))
+    const nonSubmitterIds = Array.from(uniqueUserIds).filter(userId => !submittedUserIds.has(userId))
+
+    if (nonSubmitterIds.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          weekId: currentWeek.id,
+          totalSent: 0,
+          totalErrors: 0,
+          message: 'All users have submitted',
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Step 4: Get profiles for non-submitters
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, first_name, phone, sms_opted_out_at')
+      .in('id', nonSubmitterIds)
+
+    if (profilesError) {
+      throw new Error(`Failed to fetch profiles: ${profilesError.message}`)
+    }
+
+    if (!profiles || profiles.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          weekId: currentWeek.id,
+          totalSent: 0,
+          totalErrors: 0,
+          message: 'No profiles found for non-submitters',
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Step 5: Send reminder SMS once per non-submitter (skip opted-out users)
+    const results = []
+    let totalSent = 0
+    let totalErrors = 0
+
+    for (const profile of profiles) {
+      // Skip users who have opted out
+      if (profile.sms_opted_out_at) {
+        console.log(`Skipping SMS to ${profile.phone} - user opted out at ${profile.sms_opted_out_at}`)
         continue
       }
 
-      // Find users who haven't submitted (users in circle but not in reflections)
-      const submittedUserIds = new Set((reflections || []).map(r => r.user_id))
-      const nonSubmitters = userIds.filter(userId => !submittedUserIds.has(userId))
+      try {
+        const reflectionUrl = `${appBaseUrl}/reflection`
+        const message = `Gentle reminder to complete your weekly reflection. ${reflectionUrl}`
 
-      if (nonSubmitters.length === 0) {
-        continue // Everyone in this circle has submitted
-      }
+        // Send SMS via Twilio REST API
+        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`
+        const authHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`)
 
-      // Get profiles for non-submitters
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, first_name, phone, sms_opted_out_at')
-        .in('id', nonSubmitters)
+        const smsResponse = await fetch(twilioUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${authHeader}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            From: twilioPhoneNumber,
+            To: profile.phone,
+            Body: message,
+          }),
+        })
 
-      if (profilesError) {
-        console.error(`Error fetching profiles for circle ${circle.id}:`, profilesError)
-        totalErrors++
-        continue
-      }
-
-      if (!profiles || profiles.length === 0) {
-        continue
-      }
-
-      // Send reminder SMS to each non-submitter (skip opted-out users)
-      for (const profile of profiles) {
-        // Skip users who have opted out
-        if (profile.sms_opted_out_at) {
-          console.log(`Skipping SMS to ${profile.phone} - user opted out at ${profile.sms_opted_out_at}`)
-          continue
+        if (!smsResponse.ok) {
+          const errorText = await smsResponse.text()
+          throw new Error(`Twilio API error: ${smsResponse.status} ${errorText}`)
         }
 
-        try {
-          const reflectionUrl = `${appBaseUrl}/reflection`
-          const message = `Gentle reminder to complete your weekly reflection. ${reflectionUrl}`
+        const smsData = await smsResponse.json()
+        const messageSid = smsData.sid
 
-          // Send SMS via Twilio REST API
-          const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`
-          const authHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`)
+        // Get first circle for this user (for logging purposes)
+        const firstCircle = userToFirstCircle.get(profile.id) || { id: '', name: 'Unknown' }
 
-          const smsResponse = await fetch(twilioUrl, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Basic ${authHeader}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-              From: twilioPhoneNumber,
-              To: profile.phone,
-              Body: message,
-            }),
+        // Log notification once per user
+        const { error: logError } = await supabase
+          .from('notification_logs')
+          .insert({
+            user_id: profile.id,
+            circle_id: firstCircle.id,
+            week_id: currentWeek.id,
+            type: 'second_reminder',
+            message: message,
           })
 
-          if (!smsResponse.ok) {
-            const errorText = await smsResponse.text()
-            throw new Error(`Twilio API error: ${smsResponse.status} ${errorText}`)
-          }
-
-          const smsData = await smsResponse.json()
-          const messageSid = smsData.sid
-
-          // Log notification
-          const { error: logError } = await supabase
-            .from('notification_logs')
-            .insert({
-              user_id: profile.id,
-              circle_id: circle.id,
-              week_id: currentWeek.id,
-              type: 'second_reminder',
-              message: message,
-            })
-
-          if (logError) {
-            console.error(`Error logging notification for user ${profile.id}:`, logError)
-            // Continue anyway - SMS was sent
-          }
-
-          results.push({
-            circleId: circle.id,
-            circleName: circle.name,
-            userId: profile.id,
-            firstName: profile.first_name,
-            phone: profile.phone,
-            messageSid,
-            logged: !logError,
-          })
-
-          totalSent++
-        } catch (error) {
-          console.error(`Error sending SMS to ${profile.phone}:`, error)
-          totalErrors++
-          results.push({
-            circleId: circle.id,
-            circleName: circle.name,
-            userId: profile.id,
-            firstName: profile.first_name,
-            phone: profile.phone,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          })
+        if (logError) {
+          console.error(`Error logging notification for user ${profile.id}:`, logError)
+          // Continue anyway - SMS was sent
         }
+
+        results.push({
+          userId: profile.id,
+          firstName: profile.first_name,
+          phone: profile.phone,
+          circleId: firstCircle.id,
+          circleName: firstCircle.name,
+          messageSid,
+          logged: !logError,
+        })
+
+        totalSent++
+      } catch (error) {
+        console.error(`Error sending SMS to ${profile.phone}:`, error)
+        totalErrors++
+        const firstCircle = userToFirstCircle.get(profile.id) || { id: '', name: 'Unknown' }
+        results.push({
+          userId: profile.id,
+          firstName: profile.first_name,
+          phone: profile.phone,
+          circleId: firstCircle.id,
+          circleName: firstCircle.name,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        })
       }
     }
 
