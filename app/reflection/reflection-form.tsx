@@ -45,6 +45,46 @@ export function ReflectionForm({ weekId, userId }: ReflectionFormProps) {
     photo_caption: null,
   })
 
+  // Client-side safety check: redirect if reflection already exists
+  useEffect(() => {
+    const checkExistingReflection = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        // Get user's circle memberships
+        const { data: memberships } = await supabase
+          .from('circle_members')
+          .select('circle_id')
+          .eq('user_id', user.id)
+
+        if (!memberships || memberships.length === 0) return
+
+        const circleIds = memberships.map(m => m.circle_id)
+
+        // Check if reflection already exists
+        const { data: existingReflections } = await supabase
+          .from('reflections')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('week_id', weekId)
+          .in('circle_id', circleIds)
+          .not('submitted_at', 'is', null)
+          .limit(1)
+
+        if (existingReflections && existingReflections.length > 0) {
+          // Reflection already exists - redirect to home
+          router.push('/home')
+        }
+      } catch (error) {
+        console.error('Error checking existing reflection:', error)
+        // Don't block the form if check fails
+      }
+    }
+
+    checkExistingReflection()
+  }, [weekId, router, supabase])
+
   // Load draft from localStorage
   useEffect(() => {
     const draftKey = `reflection_draft_${weekId}`

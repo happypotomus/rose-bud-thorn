@@ -4,6 +4,9 @@ import { getCurrentWeek } from '@/lib/supabase/week-server'
 import { didUserJoinMidWeek } from '@/lib/supabase/midweek-join'
 import { ReflectionForm } from './reflection-form'
 
+// Force dynamic rendering to prevent caching and ensure fresh data
+export const dynamic = 'force-dynamic'
+
 export default async function ReflectionPage() {
   const supabase = await createClient()
 
@@ -47,16 +50,16 @@ export default async function ReflectionPage() {
 
   // Check if user has already submitted a reflection for this week in ANY circle
   const circleIds = memberships.map(m => m.circle_id)
-  const { data: existingReflection } = await supabase
+  const { data: existingReflections } = await supabase
     .from('reflections')
     .select('id')
     .eq('user_id', user.id)
     .eq('week_id', currentWeek.id)
     .in('circle_id', circleIds)
     .not('submitted_at', 'is', null)
-    .maybeSingle()
+    .limit(1)
 
-  if (existingReflection) {
+  if (existingReflections && existingReflections.length > 0) {
     // User has already submitted for this week - redirect to home
     redirect('/home')
   }
