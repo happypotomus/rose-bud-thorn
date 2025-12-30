@@ -26,11 +26,33 @@ async function fixMissingTranscripts() {
   // Strategy: Group by user_id + week_id, find groups where some have transcripts and others don't
   
   // Get all reflections with transcripts
-  const { data: reflectionsWithTranscripts } = await supabase
+  // Use a simpler approach: get all submitted reflections, then filter in code
+  const { data: allReflections, error: queryError } = await supabase
     .from('reflections')
     .select('user_id, week_id, circle_id, rose_transcript, bud_transcript, thorn_transcript')
     .not('submitted_at', 'is', null)
-    .or('rose_transcript.not.is.null,bud_transcript.not.is.null,thorn_transcript.not.is.null')
+
+  if (queryError) {
+    console.error('Error querying reflections:', queryError)
+    return
+  }
+
+  if (!allReflections || allReflections.length === 0) {
+    console.log('No reflections found')
+    return
+  }
+
+  console.log(`Found ${allReflections.length} total reflection(s)\n`)
+
+  // Filter to only reflections that have at least one transcript
+  const reflectionsWithTranscripts = allReflections.filter(r => 
+    r.rose_transcript || r.bud_transcript || r.thorn_transcript
+  )
+
+  if (reflectionsWithTranscripts.length === 0) {
+    console.log('No reflections with transcripts found')
+    return
+  }
 
   if (!reflectionsWithTranscripts || reflectionsWithTranscripts.length === 0) {
     console.log('No reflections with transcripts found')
