@@ -19,7 +19,10 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/invite')
+    const redirectUrl = selectedCircleId 
+      ? `/review?circleId=${selectedCircleId}`
+      : '/review'
+    redirect(`/login?redirectTo=${encodeURIComponent(redirectUrl)}`)
   }
 
   // Get all user's circle memberships

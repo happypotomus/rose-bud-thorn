@@ -65,9 +65,10 @@ export function ReadContent() {
         // Get current user
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) {
-          // Redirect to invite page if not authenticated
-          // User will need to enter phone number and OTP to log in
-          router.push('/invite')
+          // Redirect to login page if not authenticated
+          // Preserve the current URL so user can return after login
+          const currentUrl = window.location.pathname + window.location.search
+          router.push(`/login?redirectTo=${encodeURIComponent(currentUrl)}`)
           return
         }
 

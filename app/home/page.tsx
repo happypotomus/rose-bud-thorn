@@ -25,7 +25,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/invite')
+    redirect('/login?redirectTo=/home')
   }
 
   // Get user's profile

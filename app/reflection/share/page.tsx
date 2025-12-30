@@ -20,7 +20,11 @@ export default async function ReflectionSharePage({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/invite')
+    const { reflectionId, circleId } = searchParams
+    const redirectUrl = reflectionId && circleId
+      ? `/reflection/share?reflectionId=${reflectionId}&circleId=${circleId}`
+      : '/reflection/share'
+    redirect(`/login?redirectTo=${encodeURIComponent(redirectUrl)}`)
   }
 
   const { reflectionId, circleId } = searchParams
@@ -75,6 +79,8 @@ export default async function ReflectionSharePage({
     />
   )
 }
+
+
 
 
 

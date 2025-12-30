@@ -49,7 +49,10 @@ export default async function WeekReviewPage({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/invite')
+    const redirectUrl = selectedCircleId
+      ? `/review/${weekId}?circleId=${selectedCircleId}`
+      : `/review/${weekId}`
+    redirect(`/login?redirectTo=${encodeURIComponent(redirectUrl)}`)
   }
 
   // Get week details

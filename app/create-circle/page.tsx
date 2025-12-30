@@ -12,7 +12,7 @@ export default async function CreateCirclePage() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/invite')
+    redirect('/login?redirectTo=/create-circle')
   }
 
   // Get user's profile to find circles they own
@@ -23,7 +23,7 @@ export default async function CreateCirclePage() {
     .single()
 
   if (!profile) {
-    redirect('/invite')
+    redirect('/login?redirectTo=/create-circle')
   }
 
   // Get all circles owned by this user

@@ -46,7 +46,8 @@ export default async function MyReflectionsPage({ searchParams }: MyReflectionsP
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/invite')
+    const redirectUrl = `/review/my-reflections?page=${page}`
+    redirect(`/login?redirectTo=${encodeURIComponent(redirectUrl)}`)
   }
 
   // Get all user's submitted reflections

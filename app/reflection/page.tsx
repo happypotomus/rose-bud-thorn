@@ -16,7 +16,7 @@ export default async function ReflectionPage() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/invite')
+    redirect('/login?redirectTo=/reflection')
   }
 
   // Get current week
