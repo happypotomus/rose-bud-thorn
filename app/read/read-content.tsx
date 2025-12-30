@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getCurrentWeekClient } from '@/lib/supabase/week'
-import { isCircleUnlocked } from '@/lib/supabase/unlock'
 import { CommentSection } from './comment-section'
 import Link from 'next/link'
 import { FlowerLogo } from '@/components/flower-logo'
@@ -128,7 +127,24 @@ export function ReadContent() {
         setCircleId(selectedCircleId)
 
         // Check if circle is unlocked FIRST - don't load reflections if not unlocked
-        const unlocked = await isCircleUnlocked(selectedCircleId, week.id, supabase)
+        // Use API route with service role client to ensure consistent unlock check
+        const unlockResponse = await fetch('/api/check-unlock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            circleId: selectedCircleId,
+            weekId: week.id,
+          }),
+        })
+
+        if (!unlockResponse.ok) {
+          const errorData = await unlockResponse.json()
+          setError(errorData.error || 'Unable to check unlock status')
+          setLoading(false)
+          return
+        }
+
+        const { unlocked } = await unlockResponse.json()
         setIsUnlocked(unlocked)
 
         if (!unlocked) {
