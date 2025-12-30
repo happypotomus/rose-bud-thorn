@@ -97,7 +97,7 @@ export async function sendUnlockSMS(
   // Use provided baseUrl, or fall back to environment variables
   const appBaseUrl = baseUrl || 
     process.env.NEXT_PUBLIC_APP_URL || 
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://your-app.vercel.app')
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://rosebuds.app')
   const readUrl = `${appBaseUrl}/read`
 
   // Send unlock SMS to members who haven't received it yet

@@ -6,7 +6,7 @@
 export function generateInviteLink(token: string, baseUrl?: string): string {
   const url = baseUrl || 
     process.env.NEXT_PUBLIC_APP_URL || 
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://rose-bud-thorn.vercel.app')
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://rosebuds.app')
   
   return `${url}/invite-landing?token=${token}`
 }
@@ -28,6 +28,8 @@ export async function updateCircleInviteLink(
     .update({ invite_link: inviteLink })
     .eq('id', circleId)
 }
+
+
 
 
 

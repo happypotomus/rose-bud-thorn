@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const protocol = request.headers.get('x-forwarded-proto') || 'https'
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
       (host ? `${protocol}://${host}` : 
-       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://your-app.vercel.app'))
+       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://rosebuds.app'))
 
     const result = await sendUnlockSMS(circleId, weekId, baseUrl)
 

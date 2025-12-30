@@ -16,7 +16,7 @@ export async function generateMetadata({
 
   // Get base URL
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://rose-bud-thorn.vercel.app')
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://rosebuds.app')
   
   const imageUrl = `${baseUrl}/og-invite-image.png`
 
@@ -27,8 +27,17 @@ export async function generateMetadata({
       openGraph: {
         title: 'Rose, Bud & Thorn',
         description: 'A weekly ritual tool for small private circles',
-        images: [imageUrl],
+        images: [
+          {
+            url: imageUrl,
+            width: 1424,
+            height: 752,
+            alt: 'Rose, Bud & Thorn - Join a Circle',
+          },
+        ],
         url: `${baseUrl}/invite-landing`,
+        type: 'website',
+        siteName: 'Rose, Bud & Thorn',
       },
       twitter: {
         card: 'summary_large_image',
@@ -36,6 +45,7 @@ export async function generateMetadata({
         description: 'A weekly ritual tool for small private circles',
         images: [imageUrl],
       },
+      metadataBase: new URL(baseUrl),
     }
   }
 
@@ -61,19 +71,25 @@ export async function generateMetadata({
       images: [
         {
           url: imageUrl,
-          width: 1200,
-          height: 630,
+          width: 1424,
+          height: 752,
           alt: 'Rose, Bud & Thorn - Join a Circle',
         },
       ],
       url,
       type: 'website',
+      siteName: 'Rose, Bud & Thorn',
     },
     twitter: {
       card: 'summary_large_image',
       title: 'Rose, Bud & Thorn',
       description: `${ownerName} invited you to join their Circle`,
       images: [imageUrl],
+    },
+    // Additional metadata for better platform compatibility
+    metadataBase: new URL(baseUrl),
+    alternates: {
+      canonical: url,
     },
   }
 }
@@ -253,6 +269,8 @@ async function InviteLandingWrapper({
 
   return <InviteLandingContent token={token} />
 }
+
+
 
 
 

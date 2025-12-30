@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     // Get app base URL for links in SMS
     const appBaseUrl = Deno.env.get('APP_URL') || 
       Deno.env.get('NEXT_PUBLIC_APP_URL') ||
-      'https://rose-bud-thorn.vercel.app'
+      'https://rosebuds.app'
 
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error('Missing Supabase environment variables. SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set as Edge Function secrets.')

@@ -10,9 +10,9 @@ ADD COLUMN IF NOT EXISTS invite_link TEXT;
 CREATE OR REPLACE FUNCTION generate_invite_link(invite_token_param TEXT)
 RETURNS TEXT AS $$
 BEGIN
-  -- Production URL: https://rose-bud-thorn.vercel.app/invite-landing?token={token}
+  -- Production URL: https://rosebuds.app/invite-landing?token={token}
   -- For local dev, you may need to update this manually or use application code
-  RETURN 'https://rose-bud-thorn.vercel.app/invite-landing?token=' || invite_token_param;
+  RETURN 'https://rosebuds.app/invite-landing?token=' || invite_token_param;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -40,6 +40,8 @@ CREATE TRIGGER trigger_set_invite_link
 UPDATE circles
 SET invite_link = generate_invite_link(invite_token)
 WHERE invite_token IS NOT NULL AND (invite_link IS NULL OR invite_link = '');
+
+
 
 
 

@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     const protocol = request.headers.get('x-forwarded-proto') || 'https'
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
       (host ? `${protocol}://${host}` : 
-       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://rose-bud-thorn.vercel.app'))
+       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://rosebuds.app'))
 
     // For each selected circle, create a reflection if it doesn't already exist
     const results = []
@@ -149,6 +149,8 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+
 
 
 
