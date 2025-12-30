@@ -21,7 +21,7 @@ import { transcribeAndClean } from '@/lib/openai/transcribe'
 export async function POST(request: NextRequest) {
   try {
     // Verify user is authenticated
-    const supabase = await createClient()
+    const supabase = await createServerClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
