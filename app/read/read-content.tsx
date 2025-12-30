@@ -117,12 +117,37 @@ export function ReadContent() {
           return
         }
 
-        // Get circleId from URL params or use first circle
+        // Get circleId from URL params or find unlocked circle for this week
         const urlCircleId = searchParams.get('circleId')
         const circleIds = memberships.map(m => m.circle_id)
-        const selectedCircleId = urlCircleId && circleIds.includes(urlCircleId)
-          ? urlCircleId
-          : circleIds[0]
+        
+        let selectedCircleId: string | null = null
+        
+        if (urlCircleId && circleIds.includes(urlCircleId)) {
+          // Use circleId from URL if provided and valid
+          selectedCircleId = urlCircleId
+        } else {
+          // No circleId in URL - find which circle is unlocked for this week
+          const findUnlockedResponse = await fetch('/api/find-unlocked-circle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              weekId: week.id,
+            }),
+          })
+
+          if (findUnlockedResponse.ok) {
+            const { circleId: unlockedCircleId, unlocked } = await findUnlockedResponse.json()
+            if (unlocked && unlockedCircleId) {
+              selectedCircleId = unlockedCircleId
+            }
+          }
+          
+          // Fallback to first circle if no unlocked circle found
+          if (!selectedCircleId) {
+            selectedCircleId = circleIds[0]
+          }
+        }
 
         setCircleId(selectedCircleId)
 
