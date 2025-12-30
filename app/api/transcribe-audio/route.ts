@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 import { transcribeAndClean } from '@/lib/openai/transcribe'
 
 /**
@@ -138,11 +139,26 @@ export async function POST(request: NextRequest) {
 
     // Update ALL reflections for this user/week with transcripts
     // Since reflections are inserted into multiple circles, we need to update all of them
+    // Use service role client to bypass RLS and ensure all reflections are found and updated
     if (Object.keys(updates).length > 0) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+      const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+      
+      if (!supabaseUrl || !supabaseServiceKey) {
+        console.error('Missing Supabase service role key for transcript updates')
+        return NextResponse.json(
+          { error: 'Server configuration error' },
+          { status: 500 }
+        )
+      }
+
+      const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey)
+
       // Find all reflections for this user/week (they're identical across circles)
-      const { data: allReflectionsForWeek, error: findError } = await supabase
+      // Use service role to bypass RLS and find ALL reflections regardless of circle
+      const { data: allReflectionsForWeek, error: findError } = await serviceSupabase
         .from('reflections')
-        .select('id')
+        .select('id, circle_id')
         .eq('user_id', reflection.user_id)
         .eq('week_id', reflection.week_id)
         .not('submitted_at', 'is', null)
@@ -163,9 +179,12 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      console.log(`[TRANSCRIBE] Found ${allReflectionsForWeek.length} reflection(s) to update for user/week`)
+
       // Update all reflections with the same transcripts
+      // Use service role to bypass RLS and update ALL reflections
       const allReflectionIds = allReflectionsForWeek.map(r => r.id)
-      const { error: updateError } = await supabase
+      const { error: updateError } = await serviceSupabase
         .from('reflections')
         .update(updates)
         .in('id', allReflectionIds)
@@ -177,6 +196,8 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         )
       }
+
+      console.log(`[TRANSCRIBE] Successfully updated ${allReflectionIds.length} reflection(s) with transcripts`)
     }
 
     return NextResponse.json({
