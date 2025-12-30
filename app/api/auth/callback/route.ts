@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const { userId, firstName, phone, inviteToken } = await request.json()
 
-    if (!userId || !firstName || !phone || !inviteToken) {
+    if (!userId || !firstName || !phone) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -14,32 +14,39 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Get circle from invite token
-    const { data: circle, error: circleError } = await supabase
-      .from('circles')
-      .select('id')
-      .eq('invite_token', inviteToken)
-      .single()
+    // If inviteToken is provided, verify it and get the circle
+    // If not provided, this is a new user onboarding (no circle to join yet)
+    let circle: { id: string } | null = null
+    
+    if (inviteToken) {
+      const { data: circleData, error: circleError } = await supabase
+        .from('circles')
+        .select('id')
+        .eq('invite_token', inviteToken)
+        .single()
 
-    // Enhanced error logging
-    if (circleError) {
-      console.error('Circle lookup error in API:', {
-        message: circleError.message,
-        code: circleError.code,
-        details: circleError.details,
-        hint: circleError.hint,
-      })
-      console.error('Invite token used:', inviteToken)
-    }
+      // Enhanced error logging
+      if (circleError) {
+        console.error('Circle lookup error in API:', {
+          message: circleError.message,
+          code: circleError.code,
+          details: circleError.details,
+          hint: circleError.hint,
+        })
+        console.error('Invite token used:', inviteToken)
+      }
 
-    if (circleError || !circle) {
-      return NextResponse.json(
-        { 
-          error: 'Invalid invite token',
-          details: circleError?.message || 'Circle not found',
-        },
-        { status: 400 }
-      )
+      if (circleError || !circleData) {
+        return NextResponse.json(
+          { 
+            error: 'Invalid invite token',
+            details: circleError?.message || 'Circle not found',
+          },
+          { status: 400 }
+        )
+      }
+
+      circle = circleData
     }
 
     // Check if user already has a profile
@@ -105,60 +112,70 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check if user is already in THIS specific circle
-    const { data: existingMembership } = await supabase
-      .from('circle_members')
-      .select('circle_id')
-      .eq('user_id', userId)
-      .eq('circle_id', circle.id)
-      .maybeSingle()
+    // If inviteToken was provided, add user to that circle
+    if (circle) {
+      // Check if user is already in THIS specific circle
+      const { data: existingMembership } = await supabase
+        .from('circle_members')
+        .select('circle_id')
+        .eq('user_id', userId)
+        .eq('circle_id', circle.id)
+        .maybeSingle()
 
-    if (existingMembership) {
-      // User already in this specific circle - return success
-      return NextResponse.json({
-        success: true,
-        alreadyInCircle: true,
-        circleId: existingMembership.circle_id,
-      })
-    }
-
-    // Add user to circle
-    const { error: membershipError } = await supabase
-      .from('circle_members')
-      .insert({
-        circle_id: circle.id,
-        user_id: userId,
-      })
-
-    if (membershipError) {
-      console.error('Circle membership insert error:', {
-        message: membershipError.message,
-        code: membershipError.code,
-        details: membershipError.details,
-        hint: membershipError.hint,
-      })
-      // If unique constraint violation, user is already in this specific circle
-      if (membershipError.code === '23505') {
+      if (existingMembership) {
+        // User already in this specific circle - return success
         return NextResponse.json({
           success: true,
           alreadyInCircle: true,
-          circleId: circle.id,
+          circleId: existingMembership.circle_id,
         })
       }
 
-      return NextResponse.json(
-        { 
-          error: 'Failed to add user to circle',
-          details: membershipError.message,
-        },
-        { status: 500 }
-      )
+      // Add user to circle
+      const { error: membershipError } = await supabase
+        .from('circle_members')
+        .insert({
+          circle_id: circle.id,
+          user_id: userId,
+        })
+
+      if (membershipError) {
+        console.error('Circle membership insert error:', {
+          message: membershipError.message,
+          code: membershipError.code,
+          details: membershipError.details,
+          hint: membershipError.hint,
+        })
+        // If unique constraint violation, user is already in this specific circle
+        if (membershipError.code === '23505') {
+          return NextResponse.json({
+            success: true,
+            alreadyInCircle: true,
+            circleId: circle.id,
+          })
+        }
+
+        return NextResponse.json(
+          { 
+            error: 'Failed to add user to circle',
+            details: membershipError.message,
+          },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json({
+        success: true,
+        alreadyInCircle: false,
+        circleId: circle.id,
+      })
     }
 
+    // No inviteToken = new user onboarding (just profile creation, no circle membership yet)
     return NextResponse.json({
       success: true,
       alreadyInCircle: false,
-      circleId: circle.id,
+      circleId: null,
     })
   } catch (error) {
     console.error('Auth callback error:', error)
