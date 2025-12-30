@@ -6,6 +6,7 @@ import { config } from 'dotenv'
 import { resolve } from 'path'
 import { createClient } from '@supabase/supabase-js'
 import { isCircleUnlocked } from '../lib/supabase/unlock'
+import type { Week } from '../lib/supabase/week'
 
 // Load environment variables from .env.local (or .env as fallback)
 const envPath = resolve(process.cwd(), '.env.local')
@@ -31,7 +32,7 @@ async function diagnoseUnlock(circleId?: string, weekId?: string) {
 
   // Get current week if not provided
   let targetWeekId = weekId
-  let targetWeek
+  let targetWeek: Week
   
   if (!targetWeekId) {
     const { data: currentWeek, error: weekError } = await supabase
@@ -48,8 +49,9 @@ async function diagnoseUnlock(circleId?: string, weekId?: string) {
       process.exit(1)
     }
     
-    targetWeekId = currentWeek.id
-    targetWeek = currentWeek
+    // Type assertion since RPC doesn't have explicit return type
+    targetWeek = currentWeek as Week
+    targetWeekId = targetWeek.id
   } else {
     const { data: week, error: weekError } = await supabase
       .from('weeks')
@@ -67,7 +69,7 @@ async function diagnoseUnlock(circleId?: string, weekId?: string) {
       process.exit(1)
     }
     
-    targetWeek = week
+    targetWeek = week as Week
   }
 
   console.log(`📅 Week ID: ${targetWeekId}`)
