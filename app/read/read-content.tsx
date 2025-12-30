@@ -74,13 +74,34 @@ export function ReadContent() {
 
         setCurrentUserId(user.id)
 
-        // Get current week
-        const week = await getCurrentWeekClient(supabase)
-
-        if (!week) {
-          setError('Unable to load current week')
-          setLoading(false)
-          return
+        // Get weekId from URL params or use current week
+        const urlWeekId = searchParams.get('weekId')
+        let week
+        
+        if (urlWeekId) {
+          // Fetch the specific week from URL
+          const { data: weekData, error: weekError } = await supabase
+            .from('weeks')
+            .select('id, start_at, end_at, created_at')
+            .eq('id', urlWeekId)
+            .single()
+          
+          if (weekError || !weekData) {
+            setError('Unable to load the specified week')
+            setLoading(false)
+            return
+          }
+          
+          week = weekData
+        } else {
+          // Fall back to current week if no weekId in URL
+          week = await getCurrentWeekClient(supabase)
+          
+          if (!week) {
+            setError('Unable to load current week')
+            setLoading(false)
+            return
+          }
         }
 
         setWeekId(week.id)
