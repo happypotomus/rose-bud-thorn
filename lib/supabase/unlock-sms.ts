@@ -98,7 +98,7 @@ export async function sendUnlockSMS(
   const appBaseUrl = baseUrl || 
     process.env.NEXT_PUBLIC_APP_URL || 
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://rosebuds.app')
-  const readUrl = `${appBaseUrl}/read`
+  const readUrl = `${appBaseUrl}/read?circleId=${circleId}`
 
   // Send unlock SMS to members who haven't received it yet
   const message = `Everyone in your circle (${circleName}) has submitted! You can now read each other's reflections. ${readUrl}`

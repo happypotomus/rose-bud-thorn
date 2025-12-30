@@ -106,6 +106,17 @@ export function ReadContent() {
 
         setCircleId(selectedCircleId)
 
+        // Check if circle is unlocked FIRST - don't load reflections if not unlocked
+        const unlocked = await isCircleUnlocked(selectedCircleId, week.id, supabase)
+        setIsUnlocked(unlocked)
+
+        if (!unlocked) {
+          // Circle is not unlocked yet - show appropriate message
+          setError('This circle is not unlocked yet. Please wait until everyone has submitted their reflections.')
+          setLoading(false)
+          return
+        }
+
         // Get all circle members (excluding current user)
         const { data: allMembers } = await supabase
           .from('circle_members')
@@ -188,12 +199,8 @@ export function ReadContent() {
 
         setFriends(friendReflections)
 
-        // Check if circle is unlocked (pass client-side supabase client)
-        const unlocked = await isCircleUnlocked(selectedCircleId, week.id, supabase)
-        setIsUnlocked(unlocked)
-
-        // Fetch comments for all reflections
-        if (unlocked && reflections.length > 0) {
+        // Fetch comments for all reflections (only reached if unlocked)
+        if (reflections.length > 0) {
           const reflectionIds = reflections.map((r: any) => r.id)
           const { data: commentsData, error: commentsError } = await supabase
             .from('comments')
