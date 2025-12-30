@@ -152,6 +152,11 @@ export function CreateCircleStep({ userId, onCircleCreated }: CreateCircleStepPr
                   <p className="text-xs text-green-600">Link copied to clipboard!</p>
                 )}
               </div>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4 mt-3">
+                <p className="text-xs sm:text-sm text-yellow-800 font-medium">
+                  Note: Only send this link to friends with Canadian phone numbers. US + International numbers will be available in January.
+                </p>
+              </div>
             </div>
 
             <button
