@@ -250,7 +250,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 md:p-24 pt-safe pb-safe relative">
       {/* Hamburger Menu */}
-      <HamburgerMenu currentCircleId={selectedCircleId} />
+      <HamburgerMenu currentCircleId={circleId} circleName={circleName} />
       
       {/* Circle Switcher - positioned absolutely at top center */}
       {circles.length > 1 && (
