@@ -52,8 +52,8 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
 
   const circleId = selectedCircle.id
 
-  // Get past unlocked weeks grouped by month
-  const monthGroups = await getPastUnlockedWeeks(circleId, supabase)
+  // Get past unlocked weeks grouped by month (filtered to only weeks where user has a submission)
+  const monthGroups = await getPastUnlockedWeeks(circleId, supabase, user.id)
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:py-8 md:p-24 pt-safe pb-safe">
@@ -79,7 +79,7 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
             <Link
               href="/review/my-reflections?page=1"
-              className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium text-sm sm:text-base transition-colors"
+              className="px-6 py-2 border-2 border-rose text-rose bg-transparent rounded-lg hover:bg-rose hover:text-white font-medium text-sm sm:text-base transition-colors"
             >
               Review all your reflections
             </Link>

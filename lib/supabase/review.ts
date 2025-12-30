@@ -19,11 +19,13 @@ export type MonthGroup = {
  * 
  * @param circleId - The circle ID
  * @param supabaseClient - Supabase client
+ * @param userId - Optional user ID to filter weeks where user has a submission
  * @returns Array of month groups with weeks
  */
 export async function getPastUnlockedWeeks(
   circleId: string,
-  supabaseClient: SupabaseClient
+  supabaseClient: SupabaseClient,
+  userId?: string
 ): Promise<MonthGroup[]> {
   const supabase = supabaseClient
 
@@ -46,6 +48,29 @@ export async function getPastUnlockedWeeks(
     if (unlocked) {
       unlockedWeeks.push(week)
     }
+  }
+
+  // If userId provided, filter to only weeks with user submissions
+  if (userId) {
+    const { data: userReflections } = await supabase
+      .from('reflections')
+      .select('week_id')
+      .eq('user_id', userId)
+      .eq('circle_id', circleId)
+      .not('submitted_at', 'is', null)
+
+    const weeksWithSubmissions = new Set(
+      userReflections?.map(r => r.week_id) || []
+    )
+
+    // Filter unlocked weeks to only include those where user has a submission
+    const filteredWeeks = unlockedWeeks.filter(week =>
+      weeksWithSubmissions.has(week.id)
+    )
+
+    // Replace unlockedWeeks with filtered list
+    unlockedWeeks.length = 0
+    unlockedWeeks.push(...filteredWeeks)
   }
 
   // Group by month
