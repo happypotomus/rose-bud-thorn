@@ -16,6 +16,14 @@ interface Env {
   TWILIO_PHONE_NUMBER: string
 }
 
+/**
+ * Append STOP opt-out language to SMS messages
+ * Required for Twilio A2P 10DLC compliance
+ */
+function appendStopLanguage(message: string): string {
+  return `${message}\n\nReply STOP to opt out.`
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -171,7 +179,8 @@ Deno.serve(async (req) => {
         // Personalize message with link to reflection page
         const firstName = profile.first_name || 'there'
         const reflectionUrl = `${appBaseUrl}/reflection`
-        const message = `Hey ${firstName}, it's time for your weekly Rose–Bud–Thorn reflection. ${reflectionUrl}`
+        let message = `Hey ${firstName}, it's time for your weekly Rose–Bud–Thorn reflection 🌹🌱🌵\n${reflectionUrl}`
+        message = appendStopLanguage(message)
 
         // Send SMS via Twilio REST API
         const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`

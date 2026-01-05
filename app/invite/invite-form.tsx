@@ -17,6 +17,7 @@ export default function InviteForm() {
   const [error, setError] = useState<string | null>(null)
   const [otpSent, setOtpSent] = useState(false)
   const [otp, setOtp] = useState('')
+  const [smsConsent, setSmsConsent] = useState(false)
   
   // Combine country code and phone number into E.164 format
   const fullPhoneNumber = `${countryCode}${phoneNumber.replace(/\D/g, '')}`
@@ -40,6 +41,12 @@ export default function InviteForm() {
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!smsConsent) {
+      setError('You must agree to receive SMS reminders to continue.')
+      return
+    }
+    
     setLoading(true)
     setError(null)
 
@@ -301,11 +308,20 @@ export default function InviteForm() {
             </p>
           </div>
 
-          {/* SMS Consent Notice */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
-            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-              By providing your phone number and completing signup, you agree to receive weekly reminder text messages for your reflection circle. You can opt-out at any time by contacting us or replying STOP to any message.
-            </p>
+          {/* SMS Consent Checkbox */}
+          <div className="space-y-2">
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={smsConsent}
+                onChange={(e) => setSmsConsent(e.target.checked)}
+                required
+                className="mt-1 w-5 h-5 rounded border-gray-300 text-rose focus:ring-rose cursor-pointer flex-shrink-0"
+              />
+              <span className="text-xs sm:text-sm text-gray-700 leading-relaxed">
+                I agree to receive automated SMS reminders from Rose Bud Thorn about my weekly reflection circle (up to 3 messages per week). Message and data rates may apply. Reply STOP to opt out, HELP for help.
+              </span>
+            </label>
           </div>
 
           {error && (

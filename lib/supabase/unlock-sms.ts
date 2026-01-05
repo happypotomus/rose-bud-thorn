@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { isCircleUnlocked } from './unlock'
 import { sendSMS } from '../twilio/sms'
+import { appendStopLanguage } from '../utils/sms-helpers'
 
 /**
  * Send unlock SMS to all members of a circle when everyone has submitted
@@ -105,7 +106,8 @@ export async function sendUnlockSMS(
   const readUrl = `${appBaseUrl}/read?circleId=${circleId}&weekId=${weekId}`
 
   // Send unlock SMS to members who haven't received it yet
-  const message = `Everyone in your circle (${circleName}) has submitted! You can now read each other's reflections. ${readUrl}`
+  let message = `Everyone in your circle (${circleName}) has submitted! You can now read each other's reflections 🎉\n${readUrl}`
+  message = appendStopLanguage(message)
   let sent = 0
   let errors = 0
   const results: any[] = []
