@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { NavigationBar } from "@/components/navigation-bar";
 
 export const metadata: Metadata = {
   title: "Rose–Bud–Thorn",
@@ -20,7 +21,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <NavigationBar>{children}</NavigationBar>
+      </body>
     </html>
   );
 }
