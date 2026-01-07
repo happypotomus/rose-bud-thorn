@@ -179,21 +179,20 @@ export function ReadContent() {
           return
         }
 
-        // Get all circle members (excluding current user)
+        // Get all circle members (including current user)
         const { data: allMembers } = await supabase
           .from('circle_members')
           .select('user_id')
           .eq('circle_id', selectedCircleId)
-          .neq('user_id', user.id)
 
         if (!allMembers || allMembers.length === 0) {
-          // No other members, go straight to bloom
+          // No members, go straight to bloom
           setFriends([])
           setLoading(false)
           return
         }
 
-        // Get reflections for all members for current week
+        // Get reflections for all members (including current user) for current week
         const { data: reflections } = await supabase
           .from('reflections')
           .select(`
@@ -222,8 +221,12 @@ export function ReadContent() {
           return
         }
 
-        // Get all unique user IDs from reflections
+        // Get all unique user IDs from reflections (including current user)
         const userIds = [...new Set(reflections.map((r: any) => r.user_id))]
+        // Make sure current user's ID is included for profile lookup
+        if (!userIds.includes(user.id)) {
+          userIds.push(user.id)
+        }
 
         // Fetch profiles separately to avoid RLS issues with joins
         const { data: profiles } = await supabase
@@ -416,7 +419,7 @@ export function ReadContent() {
         {/* Friend's reflection */}
         <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8 mb-6 sm:mb-8">
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6">
-            {currentFriend.first_name}'s Reflection
+            {currentFriend.user_id === currentUserId ? 'Your Reflection' : `${currentFriend.first_name}'s Reflection`}
           </h2>
 
           <div className="space-y-6 sm:space-y-8">
@@ -638,7 +641,9 @@ export function ReadContent() {
               onClick={handleContinue}
               className="w-full sm:w-auto px-6 sm:px-8 py-3 text-base sm:text-lg bg-rose text-white rounded-md hover:bg-rose-dark font-medium"
             >
-              See {friends[currentIndex + 1]?.first_name}'s entry
+              {friends[currentIndex + 1]?.user_id === currentUserId 
+                ? 'See Your entry' 
+                : `See ${friends[currentIndex + 1]?.first_name}'s entry`}
             </button>
           )}
         </div>
