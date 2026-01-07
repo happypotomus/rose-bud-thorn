@@ -8,6 +8,7 @@ import { getCurrentWeekClient } from '@/lib/supabase/week'
 import { CommentSection } from './comment-section'
 import Link from 'next/link'
 import { FlowerLogo } from '@/components/flower-logo'
+import { AudioPlayer } from '@/components/audio-player'
 
 type FriendReflection = {
   reflection_id: string
@@ -441,7 +442,7 @@ export function ReadContent() {
               )}
               {currentFriend.rose_audio_url && (
                 <div className="mt-4 sm:mt-3 space-y-3 sm:space-y-2">
-                  <audio src={currentFriend.rose_audio_url} controls className="w-full" />
+                  <AudioPlayer src={currentFriend.rose_audio_url} />
                   <button
                     onClick={() => toggleTranscript('rose')}
                     className="text-base sm:text-sm text-blue-600 hover:text-blue-800 underline font-medium py-2"
@@ -483,7 +484,7 @@ export function ReadContent() {
               )}
               {currentFriend.bud_audio_url && (
                 <div className="mt-4 sm:mt-3 space-y-3 sm:space-y-2">
-                  <audio src={currentFriend.bud_audio_url} controls className="w-full" />
+                  <AudioPlayer src={currentFriend.bud_audio_url} />
                   <button
                     onClick={() => toggleTranscript('bud')}
                     className="text-base sm:text-sm text-blue-600 hover:text-blue-800 underline font-medium py-2"
@@ -525,7 +526,7 @@ export function ReadContent() {
               )}
               {currentFriend.thorn_audio_url && (
                 <div className="mt-4 sm:mt-3 space-y-3 sm:space-y-2">
-                  <audio src={currentFriend.thorn_audio_url} controls className="w-full" />
+                  <AudioPlayer src={currentFriend.thorn_audio_url} />
                   <button
                     onClick={() => toggleTranscript('thorn')}
                     className="text-base sm:text-sm text-blue-600 hover:text-blue-800 underline font-medium py-2"

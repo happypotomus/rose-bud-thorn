@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { CommentSection } from '@/app/read/comment-section'
 import { formatReflectionAsText, copyToClipboard, hasPendingTranscripts } from '@/lib/utils/export-reflection'
+import { AudioPlayer } from '@/components/audio-player'
 import Link from 'next/link'
 
 type ReflectionWithAuthor = {
@@ -224,7 +225,7 @@ export function ReviewDisplay({
                           Audio response
                         </p>
                         <div className="mt-4 sm:mt-3 space-y-3 sm:space-y-2">
-                          <audio src={reflection.rose_audio_url} controls className="w-full" />
+                          <AudioPlayer src={reflection.rose_audio_url} />
                           <button
                             onClick={() => toggleTranscript(reflection.reflection_id, 'rose')}
                             className="text-base sm:text-sm text-blue-600 hover:text-blue-800 underline font-medium py-2"
@@ -266,7 +267,7 @@ export function ReviewDisplay({
                           Audio response
                         </p>
                         <div className="mt-4 sm:mt-3 space-y-3 sm:space-y-2">
-                          <audio src={reflection.bud_audio_url} controls className="w-full" />
+                          <AudioPlayer src={reflection.bud_audio_url} />
                           <button
                             onClick={() => toggleTranscript(reflection.reflection_id, 'bud')}
                             className="text-base sm:text-sm text-blue-600 hover:text-blue-800 underline font-medium py-2"
@@ -308,7 +309,7 @@ export function ReviewDisplay({
                           Audio response
                         </p>
                         <div className="mt-4 sm:mt-3 space-y-3 sm:space-y-2">
-                          <audio src={reflection.thorn_audio_url} controls className="w-full" />
+                          <AudioPlayer src={reflection.thorn_audio_url} />
                           <button
                             onClick={() => toggleTranscript(reflection.reflection_id, 'thorn')}
                             className="text-base sm:text-sm text-blue-600 hover:text-blue-800 underline font-medium py-2"
