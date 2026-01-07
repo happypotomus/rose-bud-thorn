@@ -66,12 +66,6 @@ export default async function WeekReviewPage({
     notFound()
   }
 
-  // Check if week is in the past
-  const weekEnd = new Date(week.end_at)
-  if (weekEnd >= new Date()) {
-    redirect('/home')
-  }
-
   // Get all user's circle memberships
   const { data: memberships } = await supabase
     .from('circle_members')
@@ -93,6 +87,13 @@ export default async function WeekReviewPage({
 
   if (!wasUnlocked) {
     redirect(selectedCircleId ? `/review?circleId=${selectedCircleId}` : '/review')
+  }
+
+  // Only redirect if week is in the future (hasn't started yet)
+  // Allow viewing past and current weeks if unlocked
+  const weekStart = new Date(week.start_at)
+  if (weekStart > new Date()) {
+    redirect('/home')
   }
 
   // Get all circle members

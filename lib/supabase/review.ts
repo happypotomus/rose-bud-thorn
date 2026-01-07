@@ -14,7 +14,7 @@ export type MonthGroup = {
 }
 
 /**
- * Get all past weeks where the circle was unlocked
+ * Get all past and current weeks where the circle was unlocked
  * Groups weeks by month for display
  * 
  * @param circleId - The circle ID
@@ -29,11 +29,12 @@ export async function getPastUnlockedWeeks(
 ): Promise<MonthGroup[]> {
   const supabase = supabaseClient
 
-  // Get all past weeks (end_at < NOW())
+  // Get all weeks that have started (past and current, but not future)
+  // This includes weeks where start_at <= NOW()
   const { data: pastWeeks, error: weeksError } = await supabase
     .from('weeks')
     .select('id, start_at, end_at, created_at')
-    .lt('end_at', new Date().toISOString())
+    .lte('start_at', new Date().toISOString())
     .order('start_at', { ascending: false })
 
   if (weeksError || !pastWeeks) {
