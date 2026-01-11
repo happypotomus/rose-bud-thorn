@@ -1,3 +1,6 @@
+-- Script to apply the exec_sql function migration
+-- Run this in Supabase Dashboard SQL Editor or via Supabase CLI
+
 -- Create a function to execute dynamic SELECT queries safely
 -- This function is SECURITY DEFINER so it runs with elevated privileges
 -- but it only allows SELECT queries for security
@@ -57,4 +60,12 @@ $$;
 -- Grant execute permission to authenticated users
 -- (though this will be called via service role in practice)
 GRANT EXECUTE ON FUNCTION exec_sql(TEXT) TO authenticated;
+
+-- Verify the function was created
+SELECT 
+  proname as function_name,
+  proargtypes::regtype[] as argument_types,
+  prorettype::regtype as return_type
+FROM pg_proc
+WHERE proname = 'exec_sql';
 

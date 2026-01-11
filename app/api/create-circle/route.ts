@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { updateCircleInviteLink } from '@/lib/utils/invite-link'
 
 export async function POST(request: NextRequest) {
   try {
@@ -86,7 +87,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Fetch the circle again to get the invite_link (set by database trigger)
+    // Always use rosebuds.app for invite links (not Vercel URLs)
+    const baseUrl = 'https://rosebuds.app'
+    
+    // Update the invite_link to ensure it uses the correct base URL
+    // (database trigger may have set it, but we want to ensure it's correct)
+    await updateCircleInviteLink(supabase, circle.id, inviteToken, baseUrl)
+
+    // Fetch the circle again to get the updated invite_link
     const { data: circleWithLink, error: fetchError } = await supabase
       .from('circles')
       .select('id, name, invite_token, invite_link, circle_owner, created_at')

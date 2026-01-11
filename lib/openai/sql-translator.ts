@@ -100,7 +100,7 @@ IMPORTANT RULES:
 5. Handle NULL values appropriately.
 6. Use proper date/time functions for TIMESTAMPTZ columns.
 7. Return ONLY the SQL query, no explanations, no markdown formatting, no code blocks.
-8. The SQL should be ready to execute directly.
+8. The SQL should be ready to execute directly - do NOT include a trailing semicolon.
 9. If the query asks about "this week" or "current week", use the get_or_create_current_week() function.
 10. Be precise with JOINs and relationships between tables.`,
         },
@@ -119,11 +119,14 @@ IMPORTANT RULES:
     }
 
     // Remove markdown code blocks if present
-    const cleanedSQL = sql
+    let cleanedSQL = sql
       .replace(/^```sql\n?/i, '')
       .replace(/^```\n?/i, '')
       .replace(/\n?```$/i, '')
       .trim()
+
+    // Remove trailing semicolons (the exec_sql function will handle this, but doing it here too for safety)
+    cleanedSQL = cleanedSQL.replace(/;+$/, '').trim()
 
     return cleanedSQL
   } catch (error) {
