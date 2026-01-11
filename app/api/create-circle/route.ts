@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { updateCircleInviteLink } from '@/lib/utils/invite-link'
+import { createClient } from '@supabase/supabase-js'
+import { createClient as createServerClient } from '@/lib/supabase/server'
+import { generateInviteLink } from '@/lib/utils/invite-link'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
+    const supabase = await createServerClient()
 
     // Get authenticated user
     const {
@@ -90,9 +91,30 @@ export async function POST(request: NextRequest) {
     // Always use rosebuds.app for invite links (not Vercel URLs)
     const baseUrl = 'https://rosebuds.app'
     
-    // Update the invite_link to ensure it uses the correct base URL
-    // (database trigger may have set it, but we want to ensure it's correct)
-    await updateCircleInviteLink(supabase, circle.id, inviteToken, baseUrl)
+    // Update the invite_link using service role client to bypass RLS
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing Supabase service role key for invite link update')
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      )
+    }
+
+    const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey)
+    const inviteLink = generateInviteLink(inviteToken, baseUrl)
+    
+    const { error: updateError } = await serviceSupabase
+      .from('circles')
+      .update({ invite_link: inviteLink })
+      .eq('id', circle.id)
+
+    if (updateError) {
+      console.error('Failed to update invite_link:', updateError)
+      // Continue anyway - the trigger should have set it
+    }
 
     // Fetch the circle again to get the updated invite_link
     const { data: circleWithLink, error: fetchError } = await supabase
